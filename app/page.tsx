@@ -18,7 +18,6 @@ const STEPS = {
 export default function StudioNexoraCometLuxury() {
   const [lang, setLang] = useState<'es' | 'en'>('es')
   const [currentStep, setCurrentStep] = useState(0)
-  const [darkMode, setDarkMode] = useState(true)
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [selectedStyle, setSelectedStyle] = useState('Realista')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -26,148 +25,216 @@ export default function StudioNexoraCometLuxury() {
   const mountRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // === THREE.JS EARTH 3D ===
+  // === THREE.JS EARTH 3D - LIMPIEZAS DE ARTEFACTOS ===
   useEffect(() => {
-    if (!mountRef.current || !darkMode) return
+    if (!mountRef.current) return
 
     const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x000000)
+    scene.fog = new THREE.Fog(0x000000, 100, 1000)
+
     const camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      10000
     )
-    camera.position.z = 2.5
+    camera.position.z = 2.2
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: false,
+      precision: 'highp',
+      powerPreference: 'high-performance'
+    })
     renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setClearColor(0x000000, 0)
-    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    
+    // ⚠️ Limpia antes de insertar
+    while (mountRef.current.firstChild) {
+      mountRef.current.removeChild(mountRef.current.firstChild)
+    }
     mountRef.current.appendChild(renderer.domElement)
 
-    // === EARTH TEXTURE ===
+    // === EARTH TEXTURE REALISTA ===
     const canvas = document.createElement('canvas')
-    canvas.width = 4096
-    canvas.height = 2048
-    const ctx = canvas.getContext('2d')!
+    canvas.width = 8192
+    canvas.height = 4096
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!
 
-    // Base ocean
-    ctx.fillStyle = '#1a4d7a'
+    // Base agua
+    ctx.fillStyle = '#0d47a1'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Gradient ocean to land
+    // Generador Perlin ruido (simplificado)
     for (let x = 0; x < canvas.width; x += 4) {
       for (let y = 0; y < canvas.height; y += 4) {
-        const noise = Math.sin(x * 0.001) * Math.cos(y * 0.002)
-        if (noise > 0.5) {
-          ctx.fillStyle = '#2e7aa9'
-        } else if (noise > 0.3) {
-          ctx.fillStyle = '#1a7f3a'
-        } else if (noise > 0.1) {
-          ctx.fillStyle = '#3a5f2a'
-        } else {
-          ctx.fillStyle = '#4a3f1a'
-        }
+        const n = Math.sin(x * 0.0005) * Math.cos(y * 0.0007)
+        let color = '#0d47a1'
+        
+        if (n > 0.7) color = '#1565c0'
+        else if (n > 0.5) color = '#1976d2'
+        else if (n > 0.3) color = '#1e88e5'
+        else if (n > 0.15) color = '#2e7d32'
+        else if (n > 0) color = '#388e3c'
+        else if (n > -0.15) color = '#43a047'
+        else if (n > -0.3) color = '#558b2f'
+        else if (n > -0.5) color = '#8d6e63'
+        else color = '#5d4037'
+
+        ctx.fillStyle = color
         ctx.fillRect(x, y, 4, 4)
       }
     }
 
-    // Add clouds
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
-    for (let i = 0; i < 100; i++) {
+    // Nubes realistas
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'
+    for (let i = 0; i < 150; i++) {
       const x = Math.random() * canvas.width
       const y = Math.random() * canvas.height
-      const r = Math.random() * 80 + 30
+      const r = Math.random() * 120 + 40
       ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2)
       ctx.fill()
     }
 
     const texture = new THREE.CanvasTexture(canvas)
-    const geometry = new THREE.SphereGeometry(1, 256, 256)
-    const material = new THREE.MeshPhongMaterial({
+    texture.magFilter = THREE.LinearFilter
+    texture.minFilter = THREE.LinearMipmapLinearFilter
+
+    const geometry = new THREE.SphereGeometry(1, 512, 512)
+    const material = new THREE.MeshStandardMaterial({
       map: texture,
-      shininess: 5,
+      roughness: 0.8,
+      metalness: 0.1,
     })
     const earth = new THREE.Mesh(geometry, material)
+    earth.castShadow = true
+    earth.receiveShadow = true
     scene.add(earth)
 
-    // === ATMOSPHERE ===
-    const atmosphereGeo = new THREE.SphereGeometry(1.02, 256, 256)
-    const atmosphereMat = new THREE.MeshBasicMaterial({
-      color: 0x0088ff,
-      transparent: true,
-      opacity: 0.2,
+    // === ATMÓSFERA LIMPIA (sin color sólido) ===
+    const atmosphereGeo = new THREE.SphereGeometry(1.015, 256, 256)
+    const atmosphereMat = new THREE.ShaderMaterial({
+      uniforms: {
+        glowColor: { value: new THREE.Color(0x0088ff) },
+        glowAlpha: { value: 0.08 }
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 glowColor;
+        uniform float glowAlpha;
+        varying vec3 vNormal;
+        void main() {
+          float rim = 1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0));
+          gl_FragColor = vec4(glowColor, rim * glowAlpha);
+        }
+      `,
       side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false
     })
     const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat)
     scene.add(atmosphere)
 
-    // === LIGHTS ===
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
+    // === ILUMINACIÓN REALISTA ===
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
     scene.add(ambientLight)
 
-    const sunLight = new THREE.PointLight(0xffffff, 1.8)
-    sunLight.position.set(5, 3, 5)
-    scene.add(sunLight)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
+    directionalLight.position.set(5, 3, 5)
+    directionalLight.castShadow = true
+    directionalLight.shadow.mapSize.width = 4096
+    directionalLight.shadow.mapSize.height = 4096
+    directionalLight.shadow.camera.far = 10
+    scene.add(directionalLight)
 
-    // === STARS ===
+    const pointLight = new THREE.PointLight(0xff6b9d, 0.8)
+    pointLight.position.set(-5, 0, 3)
+    scene.add(pointLight)
+
+    // === STARS INFINITOS (sin clipping) ===
     const starsGeo = new THREE.BufferGeometry()
-    const starsMat = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.02,
-      sizeAttenuation: true,
-    })
-
     const starsVertices = []
-    for (let i = 0; i < 3000; i++) {
-      starsVertices.push(
-        (Math.random() - 0.5) * 200,
-        (Math.random() - 0.5) * 200,
-        (Math.random() - 0.5) * 200
-      )
+    const starsSizes = []
+    
+    for (let i = 0; i < 5000; i++) {
+      const x = (Math.random() - 0.5) * 500
+      const y = (Math.random() - 0.5) * 500
+      const z = (Math.random() - 0.5) * 500
+      starsVertices.push(x, y, z)
+      starsSizes.push(Math.random() * 0.5 + 0.1)
     }
 
-    starsGeo.setAttribute(
-      'position',
-      new THREE.BufferAttribute(new Float32Array(starsVertices), 3)
-    )
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starsVertices), 3))
+    starsGeo.setAttribute('size', new THREE.BufferAttribute(new Float32Array(starsSizes), 1))
+
+    const starsMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.05,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.8
+    })
+
     const stars = new THREE.Points(starsGeo, starsMat)
     scene.add(stars)
 
-    // === ANIMATION ===
+    // === ANIMATION LOOP ===
     let animationId: number
     const animate = () => {
       animationId = requestAnimationFrame(animate)
-      earth.rotation.y += 0.0002
+      
+      earth.rotation.y += 0.00015
       atmosphere.rotation.y -= 0.00008
+      
+      // Rotación suave de estrellas
+      stars.rotation.y += 0.00002
+      
       renderer.render(scene, camera)
     }
     animate()
 
-    // === RESIZE ===
+    // === RESIZE HANDLER ===
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
+      const width = window.innerWidth
+      const height = window.innerHeight
+      
+      camera.aspect = width / height
       camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setSize(width, height)
     }
 
     window.addEventListener('resize', handleResize)
 
+    // === CLEANUP PERFECTO ===
     return () => {
       window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(animationId)
+      
+      geometry.dispose()
+      material.dispose()
+      atmosphereGeo.dispose()
+      atmosphereMat.dispose()
+      starsGeo.dispose()
+      starsMat.dispose()
+      texture.dispose()
+      
+      renderer.dispose()
+      
       if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
         mountRef.current.removeChild(renderer.domElement)
       }
-      geometry.dispose()
-      material.dispose()
-      atmosphereMat.dispose()
-      starsMat.dispose()
-      texture.dispose()
-      renderer.dispose()
     }
-  }, [darkMode])
+  }, [])
 
   const t = {
     es: {
@@ -175,9 +242,6 @@ export default function StudioNexoraCometLuxury() {
       sub: 'Estudio IA Profesional',
       desc: 'Tecnología de IA para editar fotos como profesional',
       start: 'Comenzar Ahora',
-      plans: 'Planes Simples',
-      features: 'Tecnología Premium',
-      choose: 'Elegir',
       upload: 'Arrastra fotos aquí',
       uploadHint: 'JPG, PNG, WebP • Máx 10MB • Min 3 imágenes',
       consent: 'Acepto términos y condiciones',
@@ -188,16 +252,12 @@ export default function StudioNexoraCometLuxury() {
       payment: 'Selecciona tu plan',
       next: 'Siguiente',
       prev: 'Atrás',
-      skip: 'Omitir',
     },
     en: {
       title: 'Studio Nexora Comet',
       sub: 'Professional AI Studio',
       desc: 'AI technology to edit photos like a pro',
       start: 'Start Now',
-      plans: 'Simple Plans',
-      features: 'Premium Technology',
-      choose: 'Choose',
       upload: 'Drag photos here',
       uploadHint: 'JPG, PNG, WebP • Max 10MB • Min 3 images',
       consent: 'I accept terms and conditions',
@@ -208,7 +268,6 @@ export default function StudioNexoraCometLuxury() {
       payment: 'Select your plan',
       next: 'Next',
       prev: 'Back',
-      skip: 'Skip',
     },
   }
 
@@ -249,10 +308,13 @@ export default function StudioNexoraCometLuxury() {
         style={{ zIndex: 0 }}
       />
 
+      {/* OVERLAY GRADIENT */}
+      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none" style={{ zIndex: 1 }} />
+
       {/* CONTENT */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* HEADER */}
-        <header className="backdrop-blur-2xl bg-black/40 border-b border-white/5 sticky top-0 z-50">
+        <header className="backdrop-blur-2xl bg-black/30 border-b border-white/5 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex justify-between items-center">
             <div>
               <h1 className="text-3xl md:text-4xl font-black tracking-tight">
@@ -298,17 +360,15 @@ export default function StudioNexoraCometLuxury() {
                   {texts.start} →
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
-                  {[
-                    { icon: '🤖', title: 'IA Avanzada', desc: 'Hugging Face + Google' },
-                    { icon: '⚡', title: 'Rápido', desc: '<5 segundos' },
-                    { icon: '🎨', title: '50+ Estilos', desc: 'Profesional' },
-                  ].map((feat, i) => (
-                    <div key={i} className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
-                      <div className="text-4xl mb-3">{feat.icon}</div>
-                      <h4 className="font-bold text-white mb-1">{feat.title}</h4>
-                      <p className="text-white/60 text-sm">{feat.desc}</p>
-                    </div>
+                <div className="flex justify-center gap-2 pt-8">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentStep(i)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        currentStep === i ? 'w-8 bg-white' : 'bg-white/30'
+                      }`}
+                    />
                   ))}
                 </div>
               </div>
@@ -316,8 +376,8 @@ export default function StudioNexoraCometLuxury() {
           ) : (
             // === WORKFLOW ===
             <div className="flex-1 flex flex-col px-6 md:px-12 py-12">
-              {/* PROGRESS */}
-              <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+              {/* PROGRESS STEPS */}
+              <div className="flex gap-2 mb-12 overflow-x-auto pb-2">
                 {steps.map((step, i) => (
                   <button
                     key={i}
@@ -327,7 +387,7 @@ export default function StudioNexoraCometLuxury() {
                         ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                         : currentStep > i + 1
                         ? 'bg-white/20 text-white'
-                        : 'bg-white/5 text-white/50'
+                        : 'bg-white/5 text-white/50 hover:bg-white/10'
                     }`}
                   >
                     {currentStep > i + 1 ? '✓' : i + 1}. {step}
@@ -335,54 +395,44 @@ export default function StudioNexoraCometLuxury() {
                 ))}
               </div>
 
-              {/* STEP 1: UPLOAD */}
-              {currentStep === 1 && (
-                <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full">
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`w-full p-12 md:p-20 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all ${
-                      dragActive
-                        ? 'border-purple-400 bg-purple-500/10'
-                        : 'border-white/20 hover:border-purple-500 hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="text-6xl md:text-8xl mb-4">📸</div>
-                    <h3 className="text-2xl md:text-3xl font-bold mb-2">{texts.upload}</h3>
-                    <p className="text-white/60 text-sm">{texts.uploadHint}</p>
-                  </div>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-
-                  {uploadedFiles.length > 0 && (
-                    <div className="mt-8 w-full">
-                      <p className="text-green-400 font-semibold mb-4">✓ {uploadedFiles.length} imágenes cargadas</p>
-                      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                        {uploadedFiles.map((f, i) => (
-                          <div key={i} className="aspect-square rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white/60">
-                            ✓
-                          </div>
-                        ))}
-                      </div>
+              {/* STEP CONTENT */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {currentStep === 1 && (
+                  <div className="max-w-2xl w-full space-y-6">
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full p-16 md:p-24 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all ${
+                        dragActive
+                          ? 'border-purple-400 bg-purple-500/10'
+                          : 'border-white/20 hover:border-purple-500 hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="text-7xl md:text-8xl mb-4">📸</div>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-2">{texts.upload}</h3>
+                      <p className="text-white/60">{texts.uploadHint}</p>
                     </div>
-                  )}
-                </div>
-              )}
 
-              {/* STEP 2: CONSENT */}
-              {currentStep === 2 && (
-                <div className="flex-1 flex flex-col items-center justify-center max-w-md">
-                  <h3 className="text-2xl font-bold mb-8">✓ {lang === 'es' ? 'Consentimiento' : 'Consent'}</h3>
-                  <div className="space-y-4 w-full">
+                    <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileSelect} className="hidden" />
+
+                    {uploadedFiles.length > 0 && (
+                      <div>
+                        <p className="text-green-400 font-semibold mb-4">✓ {uploadedFiles.length} {lang === 'es' ? 'imágenes' : 'images'}</p>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                          {uploadedFiles.map((_, i) => (
+                            <div key={i} className="aspect-square rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">✓</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="max-w-md w-full space-y-4">
+                    <h3 className="text-2xl font-bold mb-8">✓ {lang === 'es' ? 'Consentimiento' : 'Consent'}</h3>
                     <label className="flex gap-3 p-4 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
                       <input type="checkbox" defaultChecked className="mt-1" />
                       <span className="text-white/80">{texts.consent}</span>
@@ -392,93 +442,89 @@ export default function StudioNexoraCometLuxury() {
                       <span className="text-white/80">{texts.consentAI}</span>
                     </label>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* STEP 3: STYLE */}
-              {currentStep === 3 && (
-                <div className="flex-1 flex flex-col items-center justify-center max-w-3xl">
-                  <h3 className="text-2xl font-bold mb-8">🎨 {texts.selectStyle}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
-                    {['Realista', 'Artístico', 'Cartoon', 'Cinematic', 'Pixelado', 'Hiper'].map((style) => (
-                      <button
-                        key={style}
-                        onClick={() => {
-                          setSelectedStyle(style)
-                          setCurrentStep(4)
-                        }}
-                        className={`p-6 rounded-lg font-semibold transition-all hover:scale-105 ${
-                          selectedStyle === style
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                            : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10'
-                        }`}
-                      >
-                        {style}
-                      </button>
-                    ))}
+                {currentStep === 3 && (
+                  <div className="max-w-3xl w-full space-y-6">
+                    <h3 className="text-2xl font-bold">🎨 {texts.selectStyle}</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {['Realista', 'Artístico', 'Cartoon', 'Cinematic', 'Pixelado', 'Hiper'].map((style) => (
+                        <button
+                          key={style}
+                          onClick={() => {
+                            setSelectedStyle(style)
+                            setCurrentStep(4)
+                          }}
+                          className={`p-6 rounded-lg font-semibold transition-all hover:scale-105 ${
+                            selectedStyle === style
+                              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                              : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10'
+                          }`}
+                        >
+                          {style}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* STEP 4: GENERATE */}
-              {currentStep === 4 && (
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <h3 className="text-2xl font-bold mb-8">⚡ {lang === 'es' ? 'Generando' : 'Generating'}</h3>
-                  <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    className={`px-12 py-4 rounded-xl font-bold text-lg transition-all ${
-                      isGenerating
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-2xl hover:shadow-purple-500/50 hover:scale-105'
-                    }`}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <span className="inline-block animate-spin mr-2">⏳</span>
-                        {texts.generating}
-                      </>
-                    ) : (
-                      `${lang === 'es' ? 'Generar' : 'Generate'} ${selectedStyle}`
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* STEP 5: PREVIEW */}
-              {currentStep === 5 && (
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <h3 className="text-2xl font-bold mb-8">👁️ {texts.preview}</h3>
-                  <div className="w-full max-w-md aspect-square rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center text-6xl">
-                    🖼️
+                {currentStep === 4 && (
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-8">⚡ {lang === 'es' ? 'Generando' : 'Generating'}</h3>
+                    <button
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                      className={`px-12 py-4 rounded-xl font-bold text-lg transition-all ${
+                        isGenerating
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-2xl hover:shadow-purple-500/50 hover:scale-105'
+                      }`}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <span className="inline-block animate-spin mr-2">⏳</span>
+                          {texts.generating}
+                        </>
+                      ) : (
+                        `${lang === 'es' ? 'Generar' : 'Generate'} ${selectedStyle}`
+                      )}
+                    </button>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* STEP 6: PAYMENT */}
-              {currentStep === 6 && (
-                <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
-                  <h3 className="text-2xl font-bold mb-8">💳 {texts.payment}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                    {PRICING.map((plan) => (
-                      <button
-                        key={plan.id}
-                        onClick={() => alert(`${lang === 'es' ? 'Comprado: ' : 'Purchased: '}${plan.precio}`)}
-                        className={`p-6 rounded-xl transition-all hover:scale-105 ${
-                          plan.popular
-                            ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-400'
-                            : 'bg-white/5 border border-white/10'
-                        }`}
-                      >
-                        {plan.popular && <div className="text-xs bg-purple-400 text-black px-2 py-1 rounded mb-3 inline-block">⭐ POPULAR</div>}
-                        <div className="text-3xl font-bold text-white">{plan.precio}</div>
-                        <div className="text-white/60 text-sm mt-2">{plan.fotos} {lang === 'es' ? 'Fotos' : 'Photos'}</div>
-                        <div className="text-white/80 text-xs mt-1">{plan.desc}</div>
-                      </button>
-                    ))}
+                {currentStep === 5 && (
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-8">👁️ {texts.preview}</h3>
+                    <div className="w-full max-w-md aspect-square rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center text-6xl">
+                      🖼️
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {currentStep === 6 && (
+                  <div className="max-w-5xl w-full space-y-6">
+                    <h3 className="text-2xl font-bold">💳 {texts.payment}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {PRICING.map((plan) => (
+                        <button
+                          key={plan.id}
+                          onClick={() => alert(`${lang === 'es' ? 'Comprado: ' : 'Purchased: '}${plan.precio}`)}
+                          className={`p-6 rounded-xl transition-all hover:scale-105 ${
+                            plan.popular
+                              ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-400'
+                              : 'bg-white/5 border border-white/10'
+                          }`}
+                        >
+                          {plan.popular && <div className="text-xs bg-purple-400 text-black px-2 py-1 rounded mb-3 inline-block">⭐</div>}
+                          <div className="text-3xl font-bold">{plan.precio}</div>
+                          <p className="text-white/60 text-sm mt-2">{plan.fotos} {lang === 'es' ? 'Fotos' : 'Photos'}</p>
+                          <p className="text-white/80 text-xs mt-1">{plan.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* CONTROLS */}
               <div className="flex gap-4 justify-center mt-12">
@@ -494,21 +540,12 @@ export default function StudioNexoraCometLuxury() {
                   ← {texts.prev}
                 </button>
 
-                {currentStep < 6 && (
+                {currentStep > 0 && currentStep < 6 && (
                   <button
                     onClick={() => setCurrentStep(currentStep + 1)}
                     className="px-8 py-3 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/50 transition-all"
                   >
                     {texts.next} →
-                  </button>
-                )}
-
-                {currentStep === 0 && (
-                  <button
-                    onClick={() => setCurrentStep(1)}
-                    className="px-8 py-3 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/50 transition-all"
-                  >
-                    {texts.start} →
                   </button>
                 )}
               </div>
@@ -517,9 +554,9 @@ export default function StudioNexoraCometLuxury() {
         </main>
 
         {/* FOOTER */}
-        <footer className="backdrop-blur-xl bg-black/60 border-t border-white/5 mt-auto">
+        <footer className="backdrop-blur-xl bg-black/60 border-t border-white/5">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 text-center">
-            <p className="text-white/40 text-sm">© 2025 Studio Nexora Comet • Made with ❤️</p>
+            <p className="text-white/40 text-sm">© 2025 Studio Nexora Comet • Hecho con ❤️</p>
           </div>
         </footer>
       </div>
