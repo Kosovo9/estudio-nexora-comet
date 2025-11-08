@@ -1,900 +1,531 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Heart, Star, ChevronRight, ChevronLeft, Menu, X, LogOut, Settings, TrendingUp, Users, DollarSign, Eye, EyeOff } from 'lucide-react'
+import { Upload, ChevronRight, ChevronLeft, Menu, X, FileText, Heart, Share2, Settings, Home, Mail, Phone } from 'lucide-react'
 
-// === MOCK DATA ===
-const GALLERY_IMAGES = [
-  'https://images.unsplash.com/photo-1611339555312-e607c04352fd?w=500&h=500&fit=crop',
-  'https://images.unsplash.com/photo-1516414447565-b2e1c3cead5e?w=500&h=500&fit=crop',
-  'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=500&h=500&fit=crop',
-  'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=500&h=500&fit=crop',
-]
-
+const STEPS = ['Subir', 'Consentimiento', 'Estilo', 'Generar', 'Revisar', 'Pagar']
+const STEPS_EN = ['Upload', 'Consent', 'Style', 'Generate', 'Preview', 'Payment']
 const STYLES = ['Realista', 'Artístico', 'Cartoon', 'Cinematic', 'Pixelado', 'Hiperrealista']
-
-const PRICING_PLANS = [
-  { id: 1, fotos: 1, precio: 200, caracteristicas: ['1 foto AI', 'Edición básica', '24h descarga'] },
-  { id: 2, fotos: 2, precio: 350, caracteristicas: ['2 fotos AI', 'Edición avanzada', '7 días descarga'], popular: true },
-  { id: 3, fotos: 3, precio: 500, caracteristicas: ['3 fotos AI', 'Edición profesional', 'Sin límite'] },
-  { id: 4, fotos: 10, precio: 1000, caracteristicas: ['10 fotos AI', 'Edición pro+', 'Licencia comercial'] },
+const PRICING = [
+  { id: 1, fotos: 1, precio: 200 },
+  { id: 2, fotos: 2, precio: 350 },
+  { id: 3, fotos: 3, precio: 500 },
+  { id: 4, fotos: 10, precio: 1000 },
 ]
 
-const FEATURES = [
-  { icon: '🤖', title: 'IA Avanzada', desc: 'Hugging Face + Google Studio' },
-  { icon: '🎨', title: 'Edición Pro', desc: 'Pixaverse Style 50+ opciones' },
-  { icon: '📈', title: 'Dashboard', desc: 'Métricas en tiempo real' },
-  { icon: '💰', title: 'Afiliados', desc: '20% comisión permanente' },
-  { icon: '🌍', title: 'Multiidioma', desc: '12 idiomas disponibles' },
-  { icon: '📱', title: 'Mobile First', desc: '100% responsive' },
-]
-
-// === COMPONENTE PRINCIPAL ===
-export default function StudioNexoraCometPremium() {
+export default function StudioNexoraPremium() {
   const [lang, setLang] = useState<'es' | 'en'>('es')
   const [currentStep, setCurrentStep] = useState(1)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [showLightbox, setShowLightbox] = useState(false)
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0)
-  const [showPricingComparison, setShowPricingComparison] = useState(false)
-  const [carouselIdx, setCarouselIdx] = useState(0)
-  const [userEmail, setUserEmail] = useState('')
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [selectedStyle, setSelectedStyle] = useState('Realista')
-  const [affiliateCode, setAffiliateCode] = useState('NXR_' + Math.random().toString(36).substr(2, 9).toUpperCase())
-  const [affiliateStats, setAffiliateStats] = useState({ clicks: 0, conversions: 0, earnings: 0 })
-  const [adminMetrics, setAdminMetrics] = useState({ totalUsers: 1250, revenue: 45000, activeNow: 342 })
+  const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const texts = {
     es: {
       title: 'Studio Nexora Comet',
-      subtitle: 'Estudio IA Profesional',
-      tagline: 'Transforma fotos con IA | Edición Pro | Marketplace | Afiliados 20%',
-      uploadPhotos: 'Subir Fotos',
-      nextStep: 'Siguiente',
-      prevStep: 'Atrás',
-      selectStyle: 'Elige Estilo',
-      generateAI: 'Generar con IA',
+      subtitle: 'Estudio de Fotos con IA',
+      upload: 'Arrastra tus fotos aquí o haz clic',
+      uploadHint: 'JPG, PNG, WebP • Máx 10MB • Min 3 imágenes',
+      consent: 'Consentimiento',
+      style: 'Elige Estilo',
+      generate: 'Generar',
       preview: 'Revisar',
-      payment: 'Pagar Ahora',
-      logout: 'Salir',
-      affiliatePanel: 'Panel de Afiliados',
-      adminDashboard: 'Dashboard Admin',
-      switchLang: 'English',
+      payment: 'Pagar',
+      next: 'Siguiente',
+      prev: 'Atrás',
+      footer_about: 'Acerca de',
+      footer_support: 'Soporte',
+      footer_legal: 'Legal',
+      footer_privacy: 'Privacidad',
+      footer_contact: 'Contacto',
     },
     en: {
       title: 'Studio Nexora Comet',
-      subtitle: 'Professional AI Studio',
-      tagline: 'Transform Photos with AI | Pro Editing | Marketplace | 20% Affiliates',
-      uploadPhotos: 'Upload Photos',
-      nextStep: 'Next',
-      prevStep: 'Back',
-      selectStyle: 'Choose Style',
-      generateAI: 'Generate with AI',
+      subtitle: 'AI-Powered Photo Studio',
+      upload: 'Drag your photos here or click',
+      uploadHint: 'JPG, PNG, WebP • Max 10MB • Min 3 images',
+      consent: 'Consent',
+      style: 'Choose Style',
+      generate: 'Generate',
       preview: 'Preview',
-      payment: 'Pay Now',
-      logout: 'Logout',
-      affiliatePanel: 'Affiliate Panel',
-      adminDashboard: 'Admin Dashboard',
-      switchLang: 'Español',
+      payment: 'Payment',
+      next: 'Next',
+      prev: 'Back',
+      footer_about: 'About',
+      footer_support: 'Support',
+      footer_legal: 'Legal',
+      footer_privacy: 'Privacy',
+      footer_contact: 'Contact',
     },
   }
 
   const t = texts[lang]
+  const steps = lang === 'es' ? STEPS : STEPS_EN
 
+  // Toast handler
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCarouselIdx((prev) => (prev + 1) % GALLERY_IMAGES.length)
-    }, 4000)
-    return () => clearInterval(interval)
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
+
+  // Dark mode persistence
+  useEffect(() => {
+    const saved = localStorage.getItem('darkMode')
+    if (saved !== null) {
+      setDarkMode(JSON.parse(saved))
+    }
   }, [])
 
-  // === COMPONENTES REUTILIZABLES ===
-  const Button = ({ children, onClick, variant = 'primary', disabled = false }: any) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        padding: '12px 24px',
-        background: variant === 'primary' ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(99, 102, 241, 0.1)',
-        border: variant === 'primary' ? 'none' : '1px solid rgba(99, 102, 241, 0.3)',
-        color: '#fff',
-        borderRadius: 12,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        fontWeight: 600,
-        opacity: disabled ? 0.5 : 1,
-        transition: 'all 0.3s',
-      }}
-      onMouseOver={(e) => {
-        if (!disabled && variant === 'primary') {
-          e.currentTarget.style.transform = 'translateY(-2px)'
-          e.currentTarget.style.boxShadow = '0 12px 24px rgba(59, 130, 246, 0.4)'
-        }
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
-    >
-      {children}
-    </button>
-  )
+  // File handling
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(true)
+  }
 
-  const StepCard = ({ num, active }: { num: number; active: boolean }) => (
-    <div
-      onClick={() => setCurrentStep(num)}
-      style={{
-        padding: '16px 20px',
-        background: active ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(100, 116, 139, 0.1)',
-        border: `2px solid ${active ? '#60a5fa' : 'rgba(148, 163, 184, 0.2)'}`,
-        borderRadius: 12,
-        cursor: 'pointer',
-        color: active ? '#fff' : '#cbd5e1',
-        fontWeight: 600,
-        transition: 'all 0.3s',
-        textAlign: 'center',
-        minWidth: 100,
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)'
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
-    >
-      <div>{num}</div>
-    </div>
-  )
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(false)
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+    if (files.length < 3) {
+      setToast({ message: lang === 'es' ? 'Mín 3 imágenes requeridas' : 'Min 3 images required', type: 'error' })
+      return
+    }
+    setUploadedFiles(files)
+    setToast({ message: lang === 'es' ? '✓ Fotos cargadas' : '✓ Photos uploaded', type: 'success' })
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.currentTarget.files || [])
+    if (files.length < 3) {
+      setToast({ message: lang === 'es' ? 'Mín 3 imágenes' : 'Min 3 images', type: 'error' })
+      return
+    }
+    setUploadedFiles(files)
+    setToast({ message: lang === 'es' ? '✓ Fotos cargadas' : '✓ Photos uploaded', type: 'success' })
+  }
+
+  // Simulate generation
+  const handleGenerate = async () => {
+    setIsLoading(true)
+    await new Promise(r => setTimeout(r, 3000))
+    setIsLoading(false)
+    setToast({ message: lang === 'es' ? '✓ Generación completada' : '✓ Generation complete', type: 'success' })
+  }
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+    localStorage.setItem('darkMode', JSON.stringify(!darkMode))
+  }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-      color: '#e2e8f0',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    }}>
-      {/* === HEADER === */}
-      <header style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '20px 40px',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-        backdropFilter: 'blur(10px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <h1 style={{
-          fontSize: 28,
-          fontWeight: 800,
-          background: 'linear-gradient(90deg, #60a5fa, #d8b4fe)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          margin: 0,
-        }}>
-          {t.title}
-        </h1>
-        
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+    <div className={`min-h-screen transition-colors duration-300 ${
+      darkMode
+        ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-950 text-white'
+        : 'bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900'
+    }`}>
+      {/* HEADER */}
+      <header className={`sticky top-0 z-50 backdrop-blur-md transition-colors duration-300 ${
+        darkMode
+          ? 'bg-indigo-950/80 border-b border-purple-500/20'
+          : 'bg-white/80 border-b border-slate-200'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="font-bold text-2xl md:text-3xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            {t.title}
+          </h1>
+
+          <div className="hidden md:flex gap-4 items-center">
+            <button
+              onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 ${
+                darkMode
+                  ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
+                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              }`}
+            >
+              🌐 {lang === 'es' ? 'EN' : 'ES'}
+            </button>
+
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg transition-all hover:scale-110 ${
+                darkMode
+                  ? 'bg-yellow-500/20 text-yellow-300'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+
           <button
-            onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-            style={{
-              padding: '8px 16px',
-              background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              color: '#93c5fd',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600,
-              transition: 'all 0.2s',
-            }}
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2"
           >
-            🌐 {t.switchLang}
+            {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
           </button>
-          
-          {isAuthenticated && (
-            <>
-              <button
-                onClick={() => {
-                  const affiliateSection = document.getElementById('affiliate')
-                  affiliateSection?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                style={{
-                  padding: '8px 16px',
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  color: '#86efac',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                💰 {t.affiliatePanel}
-              </button>
-              <button
-                onClick={() => setIsAuthenticated(false)}
-                style={{
-                  padding: '8px 16px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#fca5a5',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                🚪 {t.logout}
-              </button>
-            </>
-          )}
         </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className={`md:hidden p-4 flex gap-3 flex-col ${
+            darkMode ? 'bg-indigo-900/50' : 'bg-slate-100'
+          }`}>
+            <button
+              onClick={() => {
+                setLang(lang === 'es' ? 'en' : 'es')
+                setShowMobileMenu(false)
+              }}
+              className={`px-4 py-2 rounded-lg font-semibold ${
+                darkMode
+                  ? 'bg-purple-500/20 text-purple-300'
+                  : 'bg-purple-100 text-purple-700'
+              }`}
+            >
+              🌐 {lang === 'es' ? 'English' : 'Español'}
+            </button>
+            <button
+              onClick={toggleDarkMode}
+              className={`px-4 py-2 rounded-lg font-semibold ${
+                darkMode
+                  ? 'bg-yellow-500/20 text-yellow-300'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {darkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro'}
+            </button>
+          </div>
+        )}
       </header>
 
-      {/* === MAIN CONTENT === */}
-      <main style={{ maxWidth: 1400, margin: '0 auto', padding: '60px 40px' }}>
-        {/* === HERO SECTION === */}
-        {!isAuthenticated ? (
-          <section style={{ textAlign: 'center', marginBottom: 100 }}>
-            <h2 style={{
-              fontSize: 56,
-              fontWeight: 800,
-              background: 'linear-gradient(90deg, #60a5fa, #ec4899, #a78bfa)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              margin: '0 0 20px 0',
-            }}>
-              {t.title}
-            </h2>
-            <p style={{ fontSize: 24, color: '#cbd5e1', margin: '0 0 10px 0' }}>
-              {t.subtitle}
-            </p>
-            <p style={{ fontSize: 16, color: '#94a3b8', margin: '0 0 40px 0', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto' }}>
-              {t.tagline}
-            </p>
+      {/* MAIN */}
+      <main className="max-w-6xl mx-auto px-4 py-8 md:py-16">
+        {/* HERO */}
+        <div className="text-center mb-12">
+          <h2 className="font-black text-3xl md:text-5xl mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            {t.title}
+          </h2>
+          <p className={`text-lg md:text-xl mb-2 ${darkMode ? 'text-purple-200' : 'text-slate-600'}`}>
+            {t.subtitle}
+          </p>
+          <p className={`text-sm md:text-base ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            {lang === 'es'
+              ? 'Transforma tus fotos con IA. Edición profesional, marketplace y afiliados.'
+              : 'Transform your photos with AI. Professional editing, marketplace & affiliates.'}
+          </p>
+        </div>
 
-            {/* FEATURES GRID */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 24,
-              marginBottom: 60,
-            }}>
-              {FEATURES.map((feat, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    padding: 24,
-                    background: 'rgba(30, 41, 59, 0.8)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: 16,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px)'
-                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.5)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)'
-                  }}
-                >
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>{feat.icon}</div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>{feat.title}</h3>
-                  <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>{feat.desc}</p>
-                </div>
-              ))}
-            </div>
+        {/* PROGRESS INDICATOR */}
+        <div className="fixed top-20 right-4 md:right-8 flex flex-col items-center gap-2">
+          <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full backdrop-blur-sm flex items-center justify-center font-bold text-lg md:text-xl transition-all ${
+            darkMode
+              ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-200'
+              : 'bg-purple-200/50 border-2 border-purple-400 text-purple-700'
+          }`}>
+            <span>{currentStep}</span>
+            <span className="text-xs absolute -bottom-6">{currentStep}/6</span>
+          </div>
+        </div>
 
-            {/* GALLERY CAROUSEL */}
-            <div style={{
-              position: 'relative',
-              maxWidth: 600,
-              margin: '0 auto 60px',
-              borderRadius: 20,
-              overflow: 'hidden',
-            }}>
-              <img
-                src={GALLERY_IMAGES[carouselIdx]}
-                alt="Gallery"
-                style={{
-                  width: '100%',
-                  aspectRatio: '1',
-                  objectFit: 'cover',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setShowLightbox(true)}
+        {/* STEPS NAVBAR */}
+        <div className="mb-8 flex gap-2 md:gap-3 overflow-x-auto pb-2">
+          {steps.map((step, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentStep(idx + 1)}
+              className={`px-4 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-all whitespace-nowrap hover:scale-105 ${
+                currentStep === idx + 1
+                  ? `${darkMode
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                  } border-2 border-transparent`
+                  : `${darkMode
+                    ? 'bg-slate-800/50 text-slate-300 border-2 border-slate-700'
+                    : 'bg-slate-200 text-slate-600 border-2 border-slate-300'
+                  }`
+              }`}
+            >
+              <span className={currentStep > idx + 1 ? '✓' : String(idx + 1)}> </span> {step}
+            </button>
+          ))}
+        </div>
+
+        {/* STEP CONTENT */}
+        <div className={`rounded-2xl p-8 md:p-12 mb-8 transition-all ${
+          darkMode
+            ? 'bg-slate-900/50 border border-purple-500/20 backdrop-blur-sm'
+            : 'bg-white/50 border border-slate-200 backdrop-blur-sm'
+        }`}>
+          {/* STEP 1: UPLOAD */}
+          {currentStep === 1 && (
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">📸 {t.upload}</h3>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
               />
-              <button
-                onClick={() => setCarouselIdx((prev) => (prev - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length)}
-                style={{
-                  position: 'absolute',
-                  left: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  border: 'none',
-                  color: '#fff',
-                  fontSize: 24,
-                  cursor: 'pointer',
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+              <div
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-2xl p-12 md:p-16 text-center cursor-pointer transition-all ${
+                  dragActive
+                    ? darkMode
+                      ? 'border-purple-400 bg-purple-500/10'
+                      : 'border-purple-500 bg-purple-100'
+                    : darkMode
+                    ? 'border-slate-600 hover:border-purple-500 hover:bg-purple-500/5'
+                    : 'border-slate-300 hover:border-purple-500 hover:bg-purple-50'
+                } ${dragActive ? 'animate-pulse' : ''}`}
               >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                onClick={() => setCarouselIdx((prev) => (prev + 1) % GALLERY_IMAGES.length)}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  border: 'none',
-                  color: '#fff',
-                  fontSize: 24,
-                  cursor: 'pointer',
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
+                <div className="text-6xl mb-4">⬆️</div>
+                <p className="text-lg md:text-xl font-semibold mb-2">{t.upload}</p>
+                <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {t.uploadHint}
+                </p>
+              </div>
 
-            {/* PRICING SECTION */}
-            <div style={{ marginBottom: 60 }}>
-              <h3 style={{ fontSize: 36, fontWeight: 700, margin: '0 0 40px 0' }}>
-                {lang === 'es' ? 'Planes y Precios' : 'Plans & Pricing'}
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: 24,
-              }}>
-                {PRICING_PLANS.map((plan) => (
-                  <div
-                    key={plan.id}
-                    style={{
-                      padding: 32,
-                      background: plan.popular ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))' : 'rgba(30, 41, 59, 0.8)',
-                      border: `2px solid ${plan.popular ? 'rgba(99, 102, 241, 0.5)' : 'rgba(148, 163, 184, 0.2)'}`,
-                      borderRadius: 16,
-                      transition: 'all 0.3s',
-                      position: 'relative',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px)'
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                    }}
-                  >
-                    {plan.popular && (
-                      <div style={{
-                        position: 'absolute',
-                        top: -12,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                        padding: '6px 16px',
-                        borderRadius: 20,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: '#fff',
-                      }}>
-                        ⭐ POPULAR
-                      </div>
-                    )}
-                    <div style={{ fontSize: 32, fontWeight: 700, margin: '0 0 16px 0' }}>
-                      ${plan.precio} MXN
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px 0' }}>
-                      {plan.fotos} {plan.fotos === 1 ? (lang === 'es' ? 'Foto' : 'Photo') : (lang === 'es' ? 'Fotos' : 'Photos')}
-                    </div>
-                    <div style={{ marginBottom: 20 }}>
-                      {plan.caracteristicas.map((car, idx) => (
-                        <div key={idx} style={{ fontSize: 14, color: '#cbd5e1', margin: '8px 0', textAlign: 'left' }}>
-                          ✓ {car}
+              {uploadedFiles.length > 0 && (
+                <div className="mt-8">
+                  <p className="font-semibold mb-4">{uploadedFiles.length} {lang === 'es' ? 'imágenes cargadas' : 'images uploaded'}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {uploadedFiles.map((file, idx) => (
+                      <div key={idx} className={`rounded-lg p-2 ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                        <div className={`text-center py-4 ${darkMode ? 'bg-slate-700/50' : 'bg-slate-200/50'} rounded`}>
+                          📄 {file.name.substring(0, 12)}...
                         </div>
-                      ))}
-                    </div>
-                    <Button onClick={() => setIsAuthenticated(true)}>
-                      {lang === 'es' ? 'Elegir Plan' : 'Choose Plan'}
-                    </Button>
+                      </div>
+                    ))}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2: CONSENT */}
+          {currentStep === 2 && (
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">✓ {t.consent}</h3>
+              <div className="space-y-4 max-w-md mx-auto">
+                <label className={`flex gap-3 p-4 rounded-lg cursor-pointer transition-all ${
+                  darkMode
+                    ? 'bg-purple-500/10 hover:bg-purple-500/20'
+                    : 'bg-purple-100 hover:bg-purple-200'
+                }`}>
+                  <input type="checkbox" defaultChecked className="mt-1" />
+                  <span>{lang === 'es' ? 'Acepto términos y condiciones' : 'I accept terms & conditions'}</span>
+                </label>
+                <label className={`flex gap-3 p-4 rounded-lg cursor-pointer transition-all ${
+                  darkMode
+                    ? 'bg-purple-500/10 hover:bg-purple-500/20'
+                    : 'bg-purple-100 hover:bg-purple-200'
+                }`}>
+                  <input type="checkbox" defaultChecked className="mt-1" />
+                  <span>{lang === 'es' ? 'Autorizo usar fotos para mejorar IA' : 'Allow AI training with photos'}</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: STYLE */}
+          {currentStep === 3 && (
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">🎨 {t.style}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {STYLES.map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setSelectedStyle(style)}
+                    className={`p-4 rounded-lg font-semibold transition-all hover:scale-105 ${
+                      selectedStyle === style
+                        ? `${darkMode
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                          : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                        } shadow-lg`
+                        : `${darkMode
+                          ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                          : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                        }`
+                    }`}
+                  >
+                    {style}
+                  </button>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* CTA LOGIN */}
-            <div style={{ textAlign: 'center' }}>
-              <Button onClick={() => setIsAuthenticated(true)}>
-                🚀 {lang === 'es' ? 'Empezar Ahora' : 'Get Started Now'}
-              </Button>
+          {/* STEP 4: GENERATE */}
+          {currentStep === 4 && (
+            <div className="text-center">
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">⚡ {t.generate}</h3>
+              <button
+                onClick={handleGenerate}
+                disabled={isLoading}
+                className={`px-8 py-4 rounded-lg font-bold text-lg transition-all hover:scale-105 ${
+                  isLoading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="inline-block animate-spin mr-2">⏳</span>
+                    {lang === 'es' ? 'Generando...' : 'Generating...'}
+                  </>
+                ) : (
+                  t.generate
+                )}
+              </button>
             </div>
-          </section>
-        ) : (
-          /* === AUTHENTICATED AREA === */
-          <section>
-            {/* PROGRESS STEPS */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 12,
-              marginBottom: 40,
-              flexWrap: 'wrap',
-            }}>
-              {[1, 2, 3, 4, 5, 6].map((step) => (
-                <StepCard key={step} num={step} active={currentStep === step} />
-              ))}
-            </div>
+          )}
 
-            {/* STEP CONTENT */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: 24,
-              padding: 60,
-              marginBottom: 40,
-            }}>
-              {/* STEP 1: UPLOAD */}
-              {currentStep === 1 && (
-                <div>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    📸 {t.uploadPhotos}
-                  </h3>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const files = e.currentTarget.files
-                      if (files) {
-                        setUploadedImages(Array.from(files).map(f => URL.createObjectURL(f)))
-                      }
-                    }}
-                  />
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      border: '2px dashed rgba(96, 165, 250, 0.3)',
-                      borderRadius: 16,
-                      padding: 80,
-                      background: 'rgba(15, 23, 42, 0.5)',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.5)'
-                      e.currentTarget.style.background = 'rgba(15, 23, 42, 0.7)'
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.3)'
-                      e.currentTarget.style.background = 'rgba(15, 23, 42, 0.5)'
-                    }}
+          {/* STEP 5: PREVIEW */}
+          {currentStep === 5 && (
+            <div className="text-center">
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">👁️ {t.preview}</h3>
+              <div className={`w-full max-w-sm mx-auto aspect-square rounded-lg flex items-center justify-center text-6xl ${
+                darkMode ? 'bg-slate-800' : 'bg-slate-200'
+              }`}>
+                🖼️
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6: PAYMENT */}
+          {currentStep === 6 && (
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-6">💳 {t.payment}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                {PRICING.map((plan) => (
+                  <button
+                    key={plan.id}
+                    className={`p-6 rounded-lg transition-all hover:scale-105 font-semibold ${
+                      darkMode
+                        ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-2 border-green-500/30 text-green-300 hover:border-green-400'
+                        : 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-300 text-green-700 hover:border-green-500'
+                    }`}
                   >
-                    <div style={{ fontSize: 64, marginBottom: 20 }}>⬆️</div>
-                    <p style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px 0' }}>
-                      {lang === 'es' ? 'Arrastra o haz clic' : 'Drag or click'}
-                    </p>
-                    <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-                      JPG, PNG, WebP • Máx 10MB • Min 3 {lang === 'es' ? 'imágenes' : 'images'}
-                    </p>
-                  </div>
-                  {uploadedImages.length > 0 && (
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                      gap: 12,
-                      marginTop: 24,
-                    }}>
-                      {uploadedImages.map((img, idx) => (
-                        <img key={idx} src={img} alt="uploaded" style={{
-                          width: '100%',
-                          aspectRatio: '1',
-                          objectFit: 'cover',
-                          borderRadius: 8,
-                        }} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* STEP 2: CONSENT */}
-              {currentStep === 2 && (
-                <div>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    ✓ {lang === 'es' ? 'Consentimiento' : 'Consent'}
-                  </h3>
-                  <div style={{ textAlign: 'left', maxWidth: 600, margin: '0 auto' }}>
-                    <label style={{
-                      display: 'flex',
-                      gap: 12,
-                      padding: 16,
-                      background: 'rgba(99, 102, 241, 0.1)',
-                      borderRadius: 12,
-                      cursor: 'pointer',
-                      marginBottom: 12,
-                    }}>
-                      <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-                      <span>{lang === 'es' ? 'Acepto términos y condiciones' : 'I accept terms'}</span>
-                    </label>
-                    <label style={{
-                      display: 'flex',
-                      gap: 12,
-                      padding: 16,
-                      background: 'rgba(99, 102, 241, 0.1)',
-                      borderRadius: 12,
-                      cursor: 'pointer',
-                    }}>
-                      <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-                      <span>{lang === 'es' ? 'Autorizo usar fotos para IA' : 'Allow AI training with photos'}</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: STYLE */}
-              {currentStep === 3 && (
-                <div>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    🎨 {t.selectStyle}
-                  </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: 16,
-                  }}>
-                    {STYLES.map((style) => (
-                      <button
-                        key={style}
-                        onClick={() => setSelectedStyle(style)}
-                        style={{
-                          padding: 20,
-                          background: selectedStyle === style ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(99, 102, 241, 0.1)',
-                          border: `2px solid ${selectedStyle === style ? '#60a5fa' : 'rgba(99, 102, 241, 0.3)'}`,
-                          borderRadius: 12,
-                          color: selectedStyle === style ? '#fff' : '#93c5fd',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s',
-                        }}
-                      >
-                        {style}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: GENERATE */}
-              {currentStep === 4 && (
-                <div style={{ textAlign: 'center' }}>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    ⚡ {t.generateAI}
-                  </h3>
-                  <p style={{ fontSize: 16, color: '#94a3b8', marginBottom: 30 }}>
-                    Procesando con IA ({selectedStyle})...
-                  </p>
-                  <div style={{
-                    width: 60,
-                    height: 60,
-                    border: '4px solid rgba(96, 165, 250, 0.2)',
-                    borderTopColor: '#60a5fa',
-                    borderRadius: '50%',
-                    margin: '0 auto',
-                    animation: 'spin 1s linear infinite',
-                  }} />
-                </div>
-              )}
-
-              {/* STEP 5: PREVIEW */}
-              {currentStep === 5 && (
-                <div>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    👁️ {t.preview}
-                  </h3>
-                  <div style={{
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    borderRadius: 16,
-                    aspectRatio: '1',
-                    maxWidth: 400,
-                    margin: '0 auto',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 64,
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setShowLightbox(true)}>
-                    🖼️
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 6: PAYMENT */}
-              {currentStep === 6 && (
-                <div>
-                  <h3 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 30px 0' }}>
-                    💳 {t.payment}
-                  </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                    gap: 16,
-                  }}>
-                    {PRICING_PLANS.map((plan) => (
-                      <button
-                        key={plan.id}
-                        style={{
-                          padding: 24,
-                          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
-                          border: '2px solid rgba(34, 197, 94, 0.3)',
-                          borderRadius: 12,
-                          color: '#86efac',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s',
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)'
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                        }}
-                      >
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>💰</div>
-                        {plan.fotos} {lang === 'es' ? 'Fotos' : 'Photos'}
-                        <div style={{ fontSize: 20, marginTop: 8 }}>
-                          ${plan.precio} MXN
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* NAVIGATION BUTTONS */}
-            <div style={{
-              display: 'flex',
-              gap: 16,
-              justifyContent: 'center',
-              marginBottom: 40,
-            }}>
-              <Button
-                onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                disabled={currentStep === 1}
-                variant="secondary"
-              >
-                ← {t.prevStep}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (currentStep < 6) setCurrentStep(currentStep + 1)
-                  else alert(lang === 'es' ? '¡Pago completado!' : 'Payment completed!')
-                }}
-                disabled={currentStep === 6}
-              >
-                {currentStep === 6 ? (lang === 'es' ? '✓ Completado' : '✓ Completed') : t.nextStep} →
-              </Button>
-            </div>
-
-            {/* AFFILIATE SECTION */}
-            <section id="affiliate" style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
-              borderRadius: 24,
-              padding: 40,
-              marginBottom: 40,
-            }}>
-              <h3 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 24px 0', color: '#86efac' }}>
-                💰 {t.affiliatePanel}
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 24,
-                marginBottom: 24,
-              }}>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  borderRadius: 12,
-                  borderLeft: '4px solid #22c55e',
-                }}>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Tu Código' : 'Your Code'}
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#86efac', fontFamily: 'monospace' }}>
-                    {affiliateCode}
-                  </div>
-                </div>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  borderRadius: 12,
-                  borderLeft: '4px solid #3b82f6',
-                }}>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Clics' : 'Clicks'}
-                  </div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#93c5fd' }}>
-                    {affiliateStats.clicks}
-                  </div>
-                </div>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(168, 85, 247, 0.1)',
-                  borderRadius: 12,
-                  borderLeft: '4px solid #a855f7',
-                }}>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Ganancias' : 'Earnings'}
-                  </div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#d8b4fe' }}>
-                    ${affiliateStats.earnings.toLocaleString()}
-                  </div>
-                </div>
+                    <div className="text-3xl mb-2">💰</div>
+                    <div className="text-lg">{plan.fotos} {lang === 'es' ? 'Fotos' : 'Photos'}</div>
+                    <div className="text-2xl font-bold mt-2">${plan.precio} MXN</div>
+                  </button>
+                ))}
               </div>
-              <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-                {lang === 'es'
-                  ? '20% comisión permanente por cada referral. Gana mientras duermes.'
-                  : '20% permanent commission per referral. Earn while you sleep.'}
-              </p>
-            </section>
+            </div>
+          )}
+        </div>
 
-            {/* ADMIN METRICS */}
-            <section style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: 24,
-              padding: 40,
-            }}>
-              <h3 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 24px 0' }}>
-                📊 Dashboard Métricas
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 24,
-              }}>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(99, 102, 241, 0.1)',
-                  borderRadius: 12,
-                }}>
-                  <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Usuarios Totales' : 'Total Users'}
-                  </div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: '#93c5fd' }}>
-                    {adminMetrics.totalUsers.toLocaleString()}
-                  </div>
-                </div>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  borderRadius: 12,
-                }}>
-                  <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Ingresos Hoy' : 'Revenue Today'}
-                  </div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: '#86efac' }}>
-                    ${adminMetrics.revenue.toLocaleString()}
-                  </div>
-                </div>
-                <div style={{
-                  padding: 24,
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  borderRadius: 12,
-                }}>
-                  <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 8 }}>
-                    {lang === 'es' ? 'Activos Ahora' : 'Active Now'}
-                  </div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: '#fca5a5' }}>
-                    {adminMetrics.activeNow.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </section>
-          </section>
-        )}
+        {/* NAVIGATION */}
+        <div className="flex gap-4 justify-center mb-16">
+          <button
+            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+            disabled={currentStep === 1}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 ${
+              currentStep === 1
+                ? 'opacity-50 cursor-not-allowed'
+                : darkMode
+                ? 'bg-slate-700 text-white hover:bg-slate-600'
+                : 'bg-slate-300 text-slate-900 hover:bg-slate-400'
+            }`}
+          >
+            ← {t.prev}
+          </button>
+          <button
+            onClick={() => currentStep < 6 && setCurrentStep(currentStep + 1)}
+            disabled={currentStep === 6}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 ${
+              currentStep === 6
+                ? 'opacity-50 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+            }`}
+          >
+            {t.next} →
+          </button>
+        </div>
       </main>
 
-      {/* === FOOTER === */}
-      <footer style={{
-        background: 'rgba(15, 23, 42, 0.8)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.1)',
-        padding: '40px',
-        textAlign: 'center',
-        color: '#94a3b8',
-        fontSize: 14,
-      }}>
-        <div style={{ marginBottom: 16 }}>
-          {lang === 'es'
-            ? '© Studio Nexora Comet 2025 | Aviso Legal | Privacidad | Cookies'
-            : '© Studio Nexora Comet 2025 | Legal | Privacy | Cookies'}
-        </div>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', fontSize: 20 }}>
-          📘 📗 🐦 💼
+      {/* FOOTER */}
+      <footer className={`border-t ${
+        darkMode
+          ? 'bg-indigo-950/50 border-purple-500/20'
+          : 'bg-slate-100 border-slate-200'
+      }`}>
+        <div className="max-w-6xl mx-auto px-4 py-12 md:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
+            <div>
+              <h4 className="font-bold mb-4">{lang === 'es' ? 'Producto' : 'Product'}</h4>
+              <ul className={`space-y-2 text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <li><a href="#" className="hover:text-white transition">Features</a></li>
+                <li><a href="#" className="hover:text-white transition">Pricing</a></li>
+                <li><a href="#" className="hover:text-white transition">Security</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">{t.footer_support}</h4>
+              <ul className={`space-y-2 text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <li><a href="#" className="hover:text-white transition">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition">Status</a></li>
+                <li><a href="#" className="hover:text-white transition">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">{t.footer_legal}</h4>
+              <ul className={`space-y-2 text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <li><a href="#" className="hover:text-white transition">{t.footer_privacy}</a></li>
+                <li><a href="#" className="hover:text-white transition">Terms</a></li>
+                <li><a href="#" className="hover:text-white transition">Cookies</a></li>
+              </ul>
+            </div>
+            <div className="col-span-2 md:col-span-2">
+              <h4 className="font-bold mb-4">{t.footer_contact}</h4>
+              <div className={`space-y-2 flex gap-4 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <Mail size={20} />
+                <Phone size={20} />
+                <Heart size={20} />
+              </div>
+            </div>
+          </div>
+
+          <div className={`text-center pt-8 border-t ${
+            darkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-600'
+          }`}>
+            <p>© 2025 Studio Nexora Comet. {lang === 'es' ? 'Todos los derechos reservados.' : 'All rights reserved.'}</p>
+          </div>
         </div>
       </footer>
 
-      {/* === LIGHTBOX === */}
-      {showLightbox && (
-        <div
-          onClick={() => setShowLightbox(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            cursor: 'pointer',
-          }}
-        >
-          <img
-            src={GALLERY_IMAGES[carouselIdx]}
-            alt="Full"
-            style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            onClick={() => setShowLightbox(false)}
-            style={{
-              position: 'absolute',
-              top: 20,
-              right: 20,
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              color: '#fff',
-              fontSize: 24,
-              cursor: 'pointer',
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ✕
-          </button>
+      {/* TOAST */}
+      {toast && (
+        <div className={`fixed bottom-8 right-8 px-6 py-4 rounded-lg font-semibold animate-bounce ${
+          toast.type === 'success'
+            ? darkMode
+              ? 'bg-green-500/80 text-white'
+              : 'bg-green-400 text-green-900'
+            : darkMode
+            ? 'bg-red-500/80 text-white'
+            : 'bg-red-400 text-red-900'
+        }`}>
+          {toast.message}
         </div>
       )}
-
-      {/* === ANIMATIONS === */}
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
-
