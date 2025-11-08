@@ -292,6 +292,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <FooterNexora lang={language} setLang={setLanguage} />
     </main>
   )
 }
