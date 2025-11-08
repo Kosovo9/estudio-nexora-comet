@@ -8,6 +8,7 @@ import ChatAI247 from '@/components/ChatAI247'
 import AdminPanelButtons from '@/components/AdminPanelButtons'
 import QAProgress from '@/components/QAProgress'
 import EarthPlanet from '@/components/EarthPlanet'
+import Earth3DHiper from '@/components/Earth3DHiper'
 import Tooltips from '@/components/Tooltips'
 import OnboardingModal from '@/components/OnboardingModal'
 import CopilotWidget from '@/components/CopilotWidget'
@@ -78,9 +79,16 @@ export default function Home() {
               <Hero language={language} />
             </section>
 
-            {/* Earth Planet (if not mobile) */}
+            {/* Earth 3D Hiper Realistic (if not mobile) */}
             {!isMobile && (
               <section className="py-8 flex justify-center">
+                <Earth3DHiper size={400} />
+              </section>
+            )}
+
+            {/* Earth Planet SVG Fallback (if not mobile) */}
+            {!isMobile && (
+              <section className="py-4 flex justify-center">
                 <div className="w-64 h-64">
                   <EarthPlanet language={language} />
                 </div>
