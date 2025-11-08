@@ -2,13 +2,17 @@
 
 import { useState } from 'react'
 import { CreditCard, Building2, Check } from 'lucide-react'
+import { type Language, getTexts } from '@/lib/i18n'
+import OnboardingMini from './OnboardingMini'
 
 interface PaymentFormProps {
   onComplete: () => void
   imageUrl: string | null
+  language?: Language
 }
 
-export default function PaymentForm({ onComplete, imageUrl }: PaymentFormProps) {
+export default function PaymentForm({ onComplete, imageUrl, language }: PaymentFormProps) {
+  const texts = getTexts(language)
   const [paymentMethod, setPaymentMethod] = useState<'bank' | 'stripe' | null>(null)
   const [bankDetails, setBankDetails] = useState({
     accountName: '',
@@ -70,10 +74,17 @@ export default function PaymentForm({ onComplete, imageUrl }: PaymentFormProps) 
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Complete Payment</h2>
+      <h2 className="text-2xl font-bold mb-4">{texts.payment}</h2>
       <p className="text-gray-400 mb-6">
-        Choose your payment method to download without watermark
+        {language === 'es'
+          ? 'Elige tu método de pago para descargar sin marca de agua'
+          : 'Choose your payment method to download without watermark'}
       </p>
+
+      {/* Onboarding Mini for Payment */}
+      {!paymentMethod && (
+        <OnboardingMini lang={language || 'es'} step="pay" />
+      )}
 
       {!paymentMethod ? (
         <div className="grid md:grid-cols-2 gap-6 mb-6">

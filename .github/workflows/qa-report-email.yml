@@ -1,0 +1,46 @@
+name: Send QA Report via Email
+
+on:
+  workflow_run:
+    workflows: ["Cypress Full QA"]
+    types:
+      - completed
+
+jobs:
+  send-report:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download QA report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: QA-Report-${{ github.event.workflow_run.run_number }}-*
+          path: cypress/reports
+
+      - name: Send email report
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "QA Report - Studio Nexora Comet - ${{ github.event.workflow_run.conclusion }}"
+          to: ${{ secrets.QA_REPORT_EMAIL }}
+          from: Studio Nexora QA
+          body: |
+            QA Test Report for Studio Nexora Comet
+            
+            Status: ${{ github.event.workflow_run.conclusion }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            Run: ${{ github.event.workflow_run.html_url }}
+            
+            Please download the full report from GitHub Actions artifacts.
+          attachments: |
+            cypress/reports/html/index.html
+            cypress/reports/qa-summary.md
+

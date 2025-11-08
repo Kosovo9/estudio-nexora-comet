@@ -26,16 +26,50 @@ async function processImageWithStyle(image: File, style: string): Promise<string
 }
 
 async function uploadToSupabase(imageBase64: string, style: string): Promise<string> {
-  const response = await fetch('/api/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      image: imageBase64,
-      style,
-    }),
-  })
+  // Abort controller para timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, 20000) // 20 segundos timeout
 
-  const { url } = await response.json()
-  return url
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageBase64,
+        style,
+      }),
+      signal: controller.signal, // Agregar signal para abort
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error')
+      throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    
+    if (!data.url) {
+      throw new Error('No URL returned from upload')
+    }
+
+    return data.url
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+      throw new Error('Upload timeout - The operation is taking too long. Please check your connection and try again.')
+    }
+    
+    // Re-throw with more context if possible
+    if (error.message) {
+      throw error
+    }
+    
+    throw new Error('Upload failed - Unknown error occurred')
+  }
 }
 

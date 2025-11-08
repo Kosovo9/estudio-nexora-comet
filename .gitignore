@@ -7,6 +7,10 @@
 
 # testing
 /coverage
+cypress/videos
+cypress/screenshots
+cypress/reports
+cypress/downloads
 
 # next.js
 /.next/
@@ -28,10 +32,16 @@ yarn-error.log*
 .env*.local
 .env
 
+# GitHub tokens and secrets (NEVER commit)
+*_token
+*_TOKEN
+*.token
+github_pat_*
+ghp_*
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-

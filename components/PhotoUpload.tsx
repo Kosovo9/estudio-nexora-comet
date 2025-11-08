@@ -5,25 +5,38 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, X } from 'lucide-react'
 import Image from 'next/image'
 
+import { type Language, getTexts } from '@/lib/i18n'
+import OnboardingMini from './OnboardingMini'
+import SimpleTooltip from './SimpleTooltip'
+import { logFileUpload } from '@/lib/analytics'
+
 interface PhotoUploadProps {
   onUpload: (files: File[]) => void
   minImages: number
+  language?: Language
 }
 
-export default function PhotoUpload({ onUpload, minImages }: PhotoUploadProps) {
+export default function PhotoUpload({ onUpload, minImages, language }: PhotoUploadProps) {
+  const texts = getTexts(language)
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = [...files, ...acceptedFiles].slice(0, 10) // Max 10 images
-    setFiles(newFiles)
-    
-    // Create previews
-    const newPreviews = newFiles.map(file => URL.createObjectURL(file))
-    setPreviews(newPreviews)
-    
-    onUpload(newFiles)
-  }, [files, onUpload])
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const newFiles = [...files, ...acceptedFiles].slice(0, 10) // Max 10 images
+      setFiles(newFiles)
+
+      // Create previews
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file))
+      setPreviews(newPreviews)
+
+      // Log file upload
+      logFileUpload(newFiles.length, acceptedFiles.map((f) => f.type))
+
+      onUpload(newFiles)
+    },
+    [files, onUpload]
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -43,10 +56,42 @@ export default function PhotoUpload({ onUpload, minImages }: PhotoUploadProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Upload Photos</h2>
+      <h2 className="text-2xl font-bold mb-4">{texts.uploadPhotos}</h2>
       <p className="text-gray-400 mb-6">
-        Upload at least {minImages} images to continue
+        {language === 'es'
+          ? `Sube al menos ${minImages} imágenes para continuar`
+          : `Upload at least ${minImages} images to continue`}
       </p>
+
+      {/* Onboarding Mini for Upload */}
+      {files.length === 0 && (
+        <OnboardingMini lang={language || 'es'} step="upload" />
+      )}
+
+      {/* Tooltip de información de formatos */}
+      <div className="mb-4 text-center">
+        <SimpleTooltip
+          text={
+            language === 'es'
+              ? 'Formatos: JPG, PNG, WebP. Tamaño máx: 10MB. Mínimo 3 imágenes para la IA'
+              : 'Formats: JPG, PNG, WebP. Max: 10MB. Min 3 images for AI'
+          }
+          lang={language}
+          position="top"
+        >
+          <span
+            style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              cursor: 'help',
+              textDecoration: 'underline',
+              textDecorationStyle: 'dotted',
+            }}
+          >
+            ℹ️ {language === 'es' ? 'Información de formatos' : 'Format information'}
+          </span>
+        </SimpleTooltip>
+      </div>
 
       <div
         {...getRootProps()}
@@ -71,10 +116,14 @@ export default function PhotoUpload({ onUpload, minImages }: PhotoUploadProps) {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
-              Uploaded Images ({files.length}/{minImages} minimum)
+              {language === 'es'
+                ? `Imágenes Subidas (${files.length}/${minImages} mínimo)`
+                : `Uploaded Images (${files.length}/${minImages} minimum)`}
             </h3>
             {files.length >= minImages && (
-              <span className="text-green-400 text-sm">✓ Minimum reached</span>
+              <span className="text-green-400 text-sm">
+                {language === 'es' ? '✓ Mínimo alcanzado' : '✓ Minimum reached'}
+              </span>
             )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

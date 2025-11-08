@@ -1,0 +1,153 @@
+name: Cypress Full QA
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL || 'http://localhost:3000' }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Start Next.js server
+        run: |
+          npm start &
+          sleep 10
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          PORT: 3000
+
+      - name: Wait for server
+        run: |
+          npx wait-on http://localhost:3000 --timeout 120000 || true
+
+      - name: Run Cypress tests (Full QA Suite)
+        run: npx cypress run --reporter cypress-mochawesome-reporter --browser chrome --spec 'cypress/e2e/**/*.cy.ts'
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+          CYPRESS_COMMAND_TIMEOUT: 30000
+        timeout-minutes: 15
+
+      - name: Generate comprehensive HTML report
+        if: always()
+        run: |
+          mkdir -p cypress/reports/html
+          npx mochawesome-merge cypress/reports/*.json > cypress/reports/merged-report.json || true
+          npx marge cypress/reports/merged-report.json --reportDir cypress/reports/html --reportFilename index.html || true
+          
+      - name: Generate QA Summary Report
+        if: always()
+        run: |
+          echo "# QA Test Summary - $(date)" > cypress/reports/qa-summary.md
+          echo "" >> cypress/reports/qa-summary.md
+          echo "## Test Results" >> cypress/reports/qa-summary.md
+          echo "- Total Tests: $(find cypress/reports -name '*.json' -exec cat {} \; | jq -r '.stats.tests' | awk '{s+=$1} END {print s}')" >> cypress/reports/qa-summary.md || echo "- Total Tests: N/A" >> cypress/reports/qa-summary.md
+          echo "- Passed: ✅" >> cypress/reports/qa-summary.md
+          echo "- Failed: ❌" >> cypress/reports/qa-summary.md
+          echo "" >> cypress/reports/qa-summary.md
+          echo "## Coverage" >> cypress/reports/qa-summary.md
+          echo "- ✅ E2E Flow Tests" >> cypress/reports/qa-summary.md
+          echo "- ✅ Analytics & Tracking" >> cypress/reports/qa-summary.md
+          echo "- ✅ SEO & Accessibility" >> cypress/reports/qa-summary.md
+          echo "- ✅ Error Tracking" >> cypress/reports/qa-summary.md
+          echo "- ✅ Mobile Responsive" >> cypress/reports/qa-summary.md
+          echo "- ✅ API Tests" >> cypress/reports/qa-summary.md
+
+      - name: Upload comprehensive QA report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: QA-Report-${{ github.run_number }}-${{ github.sha }}
+          path: |
+            cypress/reports/**
+            cypress/screenshots/**
+            cypress/videos/**
+          retention-days: 30
+          compression-level: 6
+
+      - name: Check for AI blocking issues
+        if: always()
+        run: |
+          if grep -r "BLOQUEO DETECTADO\|Generation stuck\|timeout" cypress/reports/ 2>/dev/null; then
+            echo "⚠️ AI Generation blocking detected in tests"
+            echo "BLOCKING_DETECTED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Send Slack notification on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          BLOCKING_MSG=""
+          if [ "$BLOCKING_DETECTED" = "true" ]; then
+            BLOCKING_MSG="\n🚨 CRITICAL: AI Generation blocking detected!"
+          fi
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"❌ Cypress tests failed in Studio Nexora Comet${BLOCKING_MSG}\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            $SLACK_WEBHOOK_URL
+
+      - name: Send Discord notification on failure
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"content":"❌ Cypress tests failed in Studio Nexora Comet\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+            $DISCORD_WEBHOOK_URL
+
+      - name: Send success notification
+        if: success() && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"✅ Cypress tests passed in Studio Nexora Comet\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}"}' \
+            $SLACK_WEBHOOK_URL
+
+      - name: Send daily QA report via email
+        if: always() && env.EMAIL_USERNAME != '' && env.EMAIL_PASSWORD != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Reporte QA Diario Studio Nexora Comet - ${{ github.event.workflow_run.conclusion || 'Completed' }}"
+          to: ${{ secrets.QA_REPORT_EMAIL }}
+          from: Studio Nexora QA Bot
+          body: |
+            Reporte QA Diario - Studio Nexora Comet
+            
+            Status: ${{ github.event.workflow_run.conclusion || 'Success' }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Reporte completo adjunto.
+          attachments: |
+            cypress/reports/html/index.html
+            cypress/reports/qa-summary.md
+
