@@ -109,6 +109,12 @@ export default function AdminPanelButtons({ language }: AdminPanelButtonsProps) 
       color: 'bg-green-500 hover:bg-green-600',
     },
     {
+      label: 'SEO',
+      icon: <FaSearch size={16} />,
+      href: '/admin/seo',
+      color: 'bg-indigo-500 hover:bg-indigo-600',
+    },
+    {
       label: t.qaShortcut,
       icon: <FaCheckCircle size={16} />,
       onClick: handleRunQA,
