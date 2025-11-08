@@ -143,6 +143,7 @@ export async function refreshAPIToken(
               token: data.newToken || data.token,
               refreshToken: data.refreshToken || currentToken.refreshToken,
               expiresAt: data.expiresAt || Date.now() + 60 * 60 * 1000, // Default 1 hour
+              provider: provider, // Required by TokenData interface
             }
           }
         }

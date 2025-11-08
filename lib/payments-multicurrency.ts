@@ -105,7 +105,7 @@ export async function createMultiCurrencyCheckout(
         currency,
         ...metadata,
       },
-      locale: CURRENCIES[currency].locale.split('-')[0],
+      locale: CURRENCIES[currency].locale.split('-')[0] as any,
     })
 
     return session
@@ -130,7 +130,7 @@ export async function createMultiCurrencyCheckout(
         converted: 'true',
         ...metadata,
       },
-      locale: CURRENCIES[currency].locale.split('-')[0],
+      locale: CURRENCIES[currency].locale.split('-')[0] as any,
     })
 
     return session

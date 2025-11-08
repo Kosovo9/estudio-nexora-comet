@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
-import { type Language, getTexts } from '@/lib/i18n'
+import { getTexts, type Language } from '@/lib/i18n'
 
 interface ConsentFormProps {
   onSubmit: () => void

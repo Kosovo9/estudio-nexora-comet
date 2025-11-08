@@ -25,7 +25,7 @@ Cypress.Commands.add('waitForClerk', () => {
 Cypress.Commands.add('uploadImages', (files: string[]) => {
   // This is a placeholder - implement based on your upload component
   files.forEach((file) => {
-    cy.get('input[type="file"]').attachFile(file, { force: true })
+    cy.get('input[type="file"]').selectFile(`cypress/fixtures/${file}`, { force: true })
   })
 })
 

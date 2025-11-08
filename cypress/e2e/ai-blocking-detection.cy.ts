@@ -13,11 +13,10 @@ describe('AI Generation Blocking Detection - Auto QA', () => {
       cy.wait(2000)
 
       // Interceptar llamadas API para detectar bloqueos
-      cy.intercept('POST', '**/api/upload', (req) => {
-        req.reply((res) => {
-          // Simular respuesta lenta o timeout
-          res.delay(500)
-        })
+      cy.intercept('POST', '**/api/upload', {
+        delay: 500,
+        statusCode: 200,
+        body: { success: true },
       }).as('uploadApi')
 
       cy.get('body').then(($body) => {
@@ -115,7 +114,8 @@ describe('AI Generation Blocking Detection - Auto QA', () => {
           cy.wait(3000)
 
           // Verificar que el timer avanzó
-          cy.contains(/tiempo transcurrido|elapsed/i).then(($timer) => {
+          cy.contains(/tiempo transcurrido|elapsed/i).then(($timer: any) => {
+            if (!$timer) return
             const timerText = $timer.text()
             const seconds = parseInt(timerText.match(/(\d+)s/)?.[1] || '0')
 

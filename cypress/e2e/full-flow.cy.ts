@@ -58,7 +58,10 @@ describe('Studio Nexora Comet - Full QA Suite', () => {
       cy.wait(2000)
 
       // Clerk components should be visible
-      cy.get('body').should('contain.text', 'Sign in').or('contain.text', 'Email')
+      cy.get('body').should(($body: any) => {
+        const text = $body.text()
+        expect(text.includes('Sign in') || text.includes('Email')).to.be.true
+      })
     })
 
     it('should display sign up page', () => {
@@ -66,7 +69,10 @@ describe('Studio Nexora Comet - Full QA Suite', () => {
       cy.wait(2000)
 
       // Clerk components should be visible
-      cy.get('body').should('contain.text', 'Sign up').or('contain.text', 'Create')
+      cy.get('body').should(($body: any) => {
+        const text = $body.text()
+        expect(text.includes('Sign up') || text.includes('Create')).to.be.true
+      })
     })
 
     // Uncomment to test actual login (requires test credentials)
@@ -218,8 +224,8 @@ describe('Studio Nexora Comet - Full QA Suite', () => {
           // Wait for timeout message (if generation takes too long)
           cy.contains(/tardando demasiado|taking too long|revisa tu conexión|check your connection/i, {
             timeout: 25000,
-          }).then(($el) => {
-            if ($el.length > 0) {
+          }).then(($el: any) => {
+            if ($el && $el.length > 0) {
               cy.log('✅ Timeout message displayed correctly')
             }
           })
@@ -361,7 +367,10 @@ describe('Studio Nexora Comet - Full QA Suite', () => {
       cy.wait(2000)
 
       // Next.js should show 404 page
-      cy.get('body').should('contain.text', '404').or('contain.text', 'Not Found')
+      cy.get('body').should(($body: any) => {
+        const text = $body.text()
+        expect(text.includes('404') || text.includes('Not Found')).to.be.true
+      })
     })
   })
 })

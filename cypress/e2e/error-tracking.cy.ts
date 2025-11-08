@@ -70,7 +70,7 @@ describe('Error Tracking & Monitoring Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         // Check for Sentry
         if ((win as any).Sentry) {
           expect((win as any).Sentry).to.exist
@@ -85,7 +85,7 @@ describe('Error Tracking & Monitoring Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         if ((win as any).Sentry) {
           // Simulate error capture
           const captureException = cy.stub((win as any).Sentry, 'captureException')
@@ -158,7 +158,7 @@ describe('Error Tracking & Monitoring Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         const perfData = win.performance
         
         if (perfData && perfData.timing) {
@@ -177,7 +177,7 @@ describe('Error Tracking & Monitoring Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         const perfData = win.performance
         
         if (perfData && perfData.getEntriesByType) {
@@ -196,16 +196,30 @@ describe('Error Tracking & Monitoring Tests', () => {
 
   describe('Uncaught Exception Handling', () => {
     it('should handle uncaught exceptions', () => {
-      cy.visit('/', {
-        onUncaughtException: (err) => {
-          // Log but don't fail test
-          cy.log(`⚠️ Uncaught exception: ${err.message}`)
-          return false // Prevent test failure
-        }
-      })
+      // Cypress doesn't support onUncaughtException in visit options
+      // Use failOnStatusCode: false and check for errors manually
+      cy.visit('/', { failOnStatusCode: false })
       cy.wait(2000)
 
-      cy.log('✅ Uncaught exception handling configured')
+      cy.window().then((win: any) => {
+        // Check for console errors
+        const errors: any[] = []
+        const originalError = win.console?.error
+        if (originalError) {
+          win.console.error = (...args: any[]) => {
+            errors.push(args)
+            originalError.apply(win.console, args)
+          }
+        }
+        
+        cy.wait(1000).then(() => {
+          if (errors.length > 0) {
+            cy.log(`⚠️ Found ${errors.length} console errors`)
+          } else {
+            cy.log('✅ No uncaught exceptions detected')
+          }
+        })
+      })
     })
   })
 })

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Download, ArrowRight } from 'lucide-react'
-import { type Language, getTexts } from '@/lib/i18n'
+import { getTexts, type Language } from '@/lib/i18n'
 import OnboardingMini from './OnboardingMini'
 
 interface WatermarkPreviewProps {

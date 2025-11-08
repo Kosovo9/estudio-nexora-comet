@@ -53,7 +53,7 @@ export default function FooterNexora({ lang, setLang }: FooterNexoraProps) {
         <div className="text-center mb-4">
           <button
             onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-            className="mx-2 bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg border border-gray-700 transition-all flex items-center space-x-2 mx-auto"
+            className="mx-auto bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg border border-gray-700 transition-all flex items-center space-x-2"
           >
             <Globe className="w-4 h-4" />
             <span>{lang === 'es' ? 'English' : 'Español'}</span>
@@ -68,7 +68,7 @@ export default function FooterNexora({ lang, setLang }: FooterNexoraProps) {
             </>
           ) : (
             <>
-              <strong>Disclaimer:</strong> We don't store your photos or data. Download before leaving — images are erased after 24h. Full user responsibility. 24/7 AI chat does not replace professional support.
+              <strong>Disclaimer:</strong> We don&apos;t store your photos or data. Download before leaving — images are erased after 24h. Full user responsibility. 24/7 AI chat does not replace professional support.
             </>
           )}
         </div>

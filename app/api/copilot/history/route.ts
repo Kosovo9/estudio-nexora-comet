@@ -21,19 +21,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ messages: [] })
     }
 
-    const messages = (data || []).map((item: any) => ({
-      id: item.id,
-      role: 'user' as const,
-      content: item.message,
-      timestamp: new Date(item.created_at),
-    })).concat(
-      (data || []).map((item: any) => ({
-        id: item.id + '_response',
-        role: 'assistant' as const,
-        content: item.response,
-        timestamp: new Date(item.created_at),
-      }))
-    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    const messages: Array<{
+      id: string
+      role: 'user' | 'assistant'
+      content: string
+      timestamp: Date
+    }> = []
+
+    // Add user messages and assistant responses
+    if (data) {
+      for (const item of data) {
+        messages.push({
+          id: item.id,
+          role: 'user',
+          content: item.message,
+          timestamp: new Date(item.created_at),
+        })
+        messages.push({
+          id: item.id + '_response',
+          role: 'assistant',
+          content: item.response,
+          timestamp: new Date(item.created_at),
+        })
+      }
+    }
+
+    // Sort by timestamp
+    messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 
     return NextResponse.json({ messages })
   } catch (error: any) {

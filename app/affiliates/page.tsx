@@ -161,7 +161,7 @@ export default function AffiliatesPage() {
             </button>
           </div>
           <p className="text-sm text-gray-400 mt-4">
-            Share this link with friends, family, or on social media. You'll earn 20% commission on every successful transaction.
+            Share this link with friends, family, or on social media. You&apos;ll earn 20% commission on every successful transaction.
           </p>
         </div>
 

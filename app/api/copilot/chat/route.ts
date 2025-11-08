@@ -52,13 +52,20 @@ export async function POST(request: NextRequest) {
 
     // Save to history
     if (currentUserId) {
-      await supabase.from('copilot_history').insert({
-        user_id: currentUserId,
-        message,
-        response,
-        language: language || 'en',
-        created_at: new Date().toISOString(),
-      }).catch(console.error)
+      try {
+        const { error } = await supabase.from('copilot_history').insert({
+          user_id: currentUserId,
+          message,
+          response,
+          language: language || 'en',
+          created_at: new Date().toISOString(),
+        })
+        if (error) {
+          console.error('Error saving to copilot_history:', error)
+        }
+      } catch (err) {
+        console.error('Error saving to copilot_history:', err)
+      }
     }
 
     return NextResponse.json({ response })

@@ -35,7 +35,7 @@ describe('Bilingual Flow Tests - ES/EN', () => {
             } else {
               cy.contains(/Generating your photo|generating/i, { timeout: 3000 }).should('exist')
               cy.contains(/Elapsed time|time/i).should('exist')
-            })
+            }
 
             // Wait for completion
             cy.wait(16000, { log: false })
@@ -45,7 +45,7 @@ describe('Bilingual Flow Tests - ES/EN', () => {
               cy.contains(/Tu foto está lista|lista|completada/i, { timeout: 5000 }).should('exist')
             } else {
               cy.contains(/Your photo is ready|ready|completed/i, { timeout: 5000 }).should('exist')
-            })
+            }
           }
         })
       })
@@ -61,14 +61,14 @@ describe('Bilingual Flow Tests - ES/EN', () => {
               cy.contains(/Descargar Foto|Descargar/i).should('exist')
             } else {
               cy.contains(/Download Photo|Download/i).should('exist')
-            })
+            }
 
             // Verify disclaimer
             if (lang === 'es') {
               cy.contains(/Aviso legal|24 horas|eliminan/i, { timeout: 5000 }).should('exist')
             } else {
               cy.contains(/Disclaimer|24 hours|deleted/i, { timeout: 5000 }).should('exist')
-            })
+            }
           }
         })
       })
@@ -104,7 +104,7 @@ describe('Bilingual Flow Tests - ES/EN', () => {
               cy.contains(/Tiempo transcurrido/i, { timeout: 2000 }).should('exist')
             } else {
               cy.contains(/Elapsed time/i, { timeout: 2000 }).should('exist')
-            })
+            }
 
             // Verify progress bar
             cy.get('.bg-gray-700.rounded-full, [class*="progress"]', { timeout: 2000 }).should('exist')
@@ -130,8 +130,8 @@ describe('Bilingual Flow Tests - ES/EN', () => {
                 ? /tardando demasiado|verifica tu conexión/i
                 : /taking too long|check your connection/i,
               { timeout: 25000 }
-            ).then(($el) => {
-              if ($el.length > 0) {
+            ).then(($el: any) => {
+              if ($el && $el.length > 0) {
                 cy.log(`✅ Timeout message displayed in ${lang}`)
               }
             })

@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, X } from 'lucide-react'
 import Image from 'next/image'
 
-import { type Language, getTexts } from '@/lib/i18n'
+import { getTexts, type Language } from '@/lib/i18n'
 import OnboardingMini from './OnboardingMini'
 import SimpleTooltip from './SimpleTooltip'
 import { logFileUpload } from '@/lib/analytics'

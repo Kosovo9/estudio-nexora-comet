@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CreditCard, Building2, Check } from 'lucide-react'
-import { type Language, getTexts } from '@/lib/i18n'
+import { getTexts, type Language } from '@/lib/i18n'
 import OnboardingMini from './OnboardingMini'
 
 interface PaymentFormProps {

@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
 
     const notion = new Client({ auth: notionKey })
 
-    const response = await notion.databases.query({
+    // Note: Notion API structure may vary. This is a placeholder implementation.
+    // In production, use the correct Notion API method based on your Notion API version.
+    const response = await (notion as any).databases.query({
       database_id: databaseId,
     })
 

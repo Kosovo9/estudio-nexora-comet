@@ -19,7 +19,7 @@ export default function SEOHead({
   url = 'https://studio-nexora.com',
   lang = 'en',
 }: SEOHeadProps) {
-  const hreflangMap = {
+  const hrefLangMap = {
     en: 'en-US',
     es: 'es-MX',
     pt: 'pt-BR',
@@ -44,7 +44,7 @@ export default function SEOHead({
       <meta property="og:image" content={image} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Studio Nexora Comet" />
-      <meta property="og:locale" content={hreflangMap[lang]} />
+      <meta property="og:locale" content={hrefLangMap[lang]} />
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -57,12 +57,12 @@ export default function SEOHead({
       <link rel="canonical" href={url} />
 
       {/* Idioma y mercado global */}
-      <link rel="alternate" hreflang="x-default" href="https://studio-nexora.com" />
-      <link rel="alternate" hreflang="en-US" href="https://studio-nexora.com/en" />
-      <link rel="alternate" hreflang="es-MX" href="https://studio-nexora.com/es" />
-      <link rel="alternate" hreflang="pt-BR" href="https://studio-nexora.com/pt" />
-      <link rel="alternate" hreflang="fr-FR" href="https://studio-nexora.com/fr" />
-      <link rel="alternate" hreflang="zh-CN" href="https://studio-nexora.com/zh" />
+      <link rel="alternate" hrefLang="x-default" href="https://studio-nexora.com" />
+      <link rel="alternate" hrefLang="en-US" href="https://studio-nexora.com/en" />
+      <link rel="alternate" hrefLang="es-MX" href="https://studio-nexora.com/es" />
+      <link rel="alternate" hrefLang="pt-BR" href="https://studio-nexora.com/pt" />
+      <link rel="alternate" hrefLang="fr-FR" href="https://studio-nexora.com/fr" />
+      <link rel="alternate" hrefLang="zh-CN" href="https://studio-nexora.com/zh" />
 
       {/* Favicon */}
       <link rel="icon" href="/favicon.ico" />

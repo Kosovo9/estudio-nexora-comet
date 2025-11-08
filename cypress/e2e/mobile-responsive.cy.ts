@@ -116,8 +116,11 @@ describe('Mobile Responsive Testing', () => {
 
         cy.get('button').each(($btn, index, $list) => {
           if (index < $list.length - 1) {
-            const btn1 = $btn[0]
-            const btn2 = $list[index + 1][0]
+            const btn1 = ($btn[0] as any) as HTMLElement
+            const nextBtn = ($list as any)[index + 1]
+            const btn2 = (nextBtn[0] as any) as HTMLElement
+            
+            if (!btn1 || !btn2) return
             
             const rect1 = btn1.getBoundingClientRect()
             const rect2 = btn2.getBoundingClientRect()

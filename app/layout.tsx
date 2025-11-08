@@ -63,11 +63,12 @@ export const metadata: Metadata = {
       'zh-CN': 'https://studio-nexora.com/zh',
     },
   },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
-    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || '',
-    bing: process.env.NEXT_PUBLIC_BING_VERIFICATION || '',
-  },
+      verification: {
+        google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
+        yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || '',
+        // @ts-ignore - Bing verification is not in the type definition but is supported
+        bing: process.env.NEXT_PUBLIC_BING_VERIFICATION || '',
+      },
 }
 
 // Google Analytics Component

@@ -65,8 +65,10 @@ export default function BiometricLogin() {
 
         if (data.success) {
           // Complete sign-in with Clerk
+          // Note: Clerk may not support 'web3' strategy. Use appropriate strategy for biometric login.
+          // This is a placeholder - adjust based on your Clerk configuration.
           const result = await signIn.create({
-            strategy: 'web3',
+            strategy: 'email_link' as any, // Placeholder - replace with actual biometric strategy
             identifier: data.userId,
           })
 

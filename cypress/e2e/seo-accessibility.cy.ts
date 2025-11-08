@@ -188,7 +188,9 @@ describe('SEO & Accessibility Tests', () => {
       })
 
       // Check for modals/dialogs
-      cy.get('[role="dialog"], [role="alert"]').should('have.attr', 'aria-labelledby').or('have.attr', 'aria-label')
+      cy.get('[role="dialog"], [role="alert"]').should(($el: any) => {
+        expect($el.attr('aria-labelledby') || $el.attr('aria-label')).to.exist
+      })
     })
 
     it('should have proper color contrast', () => {
@@ -197,11 +199,11 @@ describe('SEO & Accessibility Tests', () => {
       cy.injectAxe()
       
       // Check color contrast (part of a11y check)
-      cy.checkA11y(null, {
+      cy.checkA11y(undefined, {
         rules: {
           'color-contrast': { enabled: true }
         }
-      })
+      } as any)
     })
 
     it('should be keyboard navigable', () => {
@@ -209,7 +211,7 @@ describe('SEO & Accessibility Tests', () => {
       cy.wait(2000)
 
       // Test tab navigation
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       cy.focused().should('exist')
       
       cy.log('✅ Keyboard navigation works')

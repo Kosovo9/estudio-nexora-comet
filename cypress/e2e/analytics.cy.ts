@@ -9,7 +9,7 @@ describe('Analytics & Tracking Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         // Check if gtag is available (Google Analytics)
         if (win.gtag) {
           expect(win.gtag).to.exist
@@ -24,7 +24,7 @@ describe('Analytics & Tracking Tests', () => {
       cy.visit('/')
       cy.wait(2000)
 
-      cy.window().then((win) => {
+      cy.window().then((win: any) => {
         // Check for dataLayer (Google Tag Manager)
         if (win.dataLayer) {
           expect(win.dataLayer).to.exist
@@ -42,7 +42,7 @@ describe('Analytics & Tracking Tests', () => {
         if ($body.find('button').length > 0) {
           cy.get('button').first().click({ force: true })
           
-          cy.window().then((win) => {
+          cy.window().then((win: any) => {
             if (win.dataLayer) {
               // Check if events are being tracked
               const events = win.dataLayer.filter((item: any) => item.event)
@@ -59,7 +59,7 @@ describe('Analytics & Tracking Tests', () => {
 
       cy.get('body').then(($body) => {
         if ($body.find('form').length > 0) {
-          cy.window().then((win) => {
+          cy.window().then((win: any) => {
             const initialEvents = win.dataLayer?.length || 0
             
             // Try to submit form (if possible)
@@ -69,7 +69,7 @@ describe('Analytics & Tracking Tests', () => {
                 
                 cy.wait(1000)
                 
-                cy.window().then((win2) => {
+                cy.window().then((win2: any) => {
                   const newEvents = win2.dataLayer?.length || 0
                   if (newEvents > initialEvents) {
                     cy.log('✅ Form submission tracked')
@@ -116,14 +116,14 @@ describe('Analytics & Tracking Tests', () => {
 
       cy.get('body').then(($body) => {
         if ($body.text().includes('Payment') || $body.text().includes('Pago')) {
-          cy.window().then((win) => {
+          cy.window().then((win: any) => {
             const initialEvents = win.dataLayer?.length || 0
             
             cy.contains(/payment|pago|pay/i).first().click({ force: true })
             
             cy.wait(1000)
             
-            cy.window().then((win2) => {
+            cy.window().then((win2: any) => {
               const newEvents = win2.dataLayer?.length || 0
               if (newEvents > initialEvents) {
                 cy.log('✅ Payment event tracked')
@@ -140,14 +140,14 @@ describe('Analytics & Tracking Tests', () => {
 
       cy.get('body').then(($body) => {
         if ($body.text().includes('Generate') || $body.text().includes('Generar')) {
-          cy.window().then((win) => {
+          cy.window().then((win: any) => {
             const initialEvents = win.dataLayer?.length || 0
             
             cy.contains(/generate|generar/i).first().click({ force: true })
             
             cy.wait(2000)
             
-            cy.window().then((win2) => {
+            cy.window().then((win2: any) => {
               const newEvents = win2.dataLayer?.length || 0
               if (newEvents > initialEvents) {
                 cy.log('✅ AI generation event tracked')

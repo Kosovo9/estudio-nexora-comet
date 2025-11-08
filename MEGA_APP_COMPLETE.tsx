@@ -47,7 +47,7 @@ import SentryInit from '@/components/SentryInit'
 import MegaUIWrapper from '@/components/MegaUIWrapper'
 
 // ============ HOOKS ============
-import { useTheme } from '@/hooks/useTheme'
+import { useThemeToggle } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 // ============ LIB / UTILIDADES ============
@@ -69,15 +69,15 @@ export default function MegaAppComplete() {
   const [showOnboard, setShowOnboard] = useState(true)
   const [showPlanet, setShowPlanet] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme } = useThemeToggle()
 
   // Activar shortcuts globales (Shift+E, Shift+C, Shift+Q, Shift+A)
   useKeyboardShortcuts({
     onToggleEarth: () => setShowPlanet((prev) => !prev),
-    onToggleCopilot: () => {
+    onOpenCopilot: () => {
       // Toggle Copilot widget
     },
-    onTriggerQA: () => {
+    onRunQA: () => {
       fetch('/api/admin/run-qa', { method: 'POST' })
         .then((res) => res.json())
         .then((data) => {
@@ -198,7 +198,8 @@ export default function MegaAppComplete() {
         {currentStep === 1 && (
           <PhotoUpload
             language={lang}
-            onUploadComplete={() => setCurrentStep(2)}
+            onUpload={() => setCurrentStep(2)}
+            minImages={1}
           />
         )}
         {currentStep === 2 && (

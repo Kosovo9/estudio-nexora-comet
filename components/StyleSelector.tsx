@@ -1,8 +1,8 @@
 'use client'
 
-import { Style } from '@/app/page'
+export type Style = 'dark-studio' | 'paris-cafe'
 import { Check } from 'lucide-react'
-import { type Language, getTexts } from '@/lib/i18n'
+import { getTexts, type Language } from '@/lib/i18n'
 
 interface StyleSelectorProps {
   onSelect: (style: Style) => void
@@ -60,12 +60,12 @@ export default function StyleSelector({ onSelect, selectedStyle, language }: Sty
             </h3>
             <p className="text-gray-400 text-sm">
               {style.id === 'dark-studio'
-                ? (language === 'es'
-                    ? 'Iluminación de estudio oscuro profesional con sombras dramáticas'
-                    : 'Professional dark studio lighting with dramatic shadows')
-                : (language === 'es'
-                    ? 'Ambiente cálido y acogedor de café parisino con iluminación natural'
-                    : 'Warm, cozy Parisian café atmosphere with natural lighting'))}
+                ? language === 'es'
+                  ? 'Iluminación de estudio oscuro profesional con sombras dramáticas'
+                  : 'Professional dark studio lighting with dramatic shadows'
+                : language === 'es'
+                  ? 'Ambiente cálido y acogedor de café parisino con iluminación natural'
+                  : 'Warm, cozy Parisian café atmosphere with natural lighting'}
             </p>
             <div
               className={`mt-4 h-2 rounded-full bg-gradient-to-r ${style.gradient}`}

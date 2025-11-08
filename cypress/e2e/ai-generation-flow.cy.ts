@@ -71,8 +71,8 @@ describe('AI Generation Flow - Complete Testing', () => {
           cy.contains(
             /tardando demasiado|taking too long|revisa tu conexión|check your connection/i,
             { timeout: 25000 }
-          ).then(($el) => {
-            if ($el.length > 0) {
+          ).then(($el: any) => {
+            if ($el && $el.length > 0) {
               cy.log('✅ Timeout message displayed correctly')
               // Verify error styling
               cy.get('.text-red-400, [class*="error"]').should('exist')
@@ -102,11 +102,10 @@ describe('AI Generation Flow - Complete Testing', () => {
         if ($body.find('button').text().includes('Generate')) {
           cy.contains(/generate|generar/i).click({ force: true })
 
-          // Verify button is disabled
+          // Verify button is disabled or has aria-busy
           cy.contains(/generate|generar/i)
             .parent('button')
-            .should('be.disabled')
-            .or('have.attr', 'aria-busy', 'true')
+            .should('satisfy', ($el: any) => $el[0].disabled || $el[0].getAttribute('aria-busy') === 'true')
         }
       })
     })
@@ -120,8 +119,8 @@ describe('AI Generation Flow - Complete Testing', () => {
           cy.contains(/generate|generar/i).click({ force: true })
 
           // Wait for completion (max 20 seconds)
-          cy.contains(/completada|completed|éxito|success/i, { timeout: 20000 }).then(($el) => {
-            if ($el.length > 0) {
+          cy.contains(/completada|completed|éxito|success/i, { timeout: 20000 }).then(($el: any) => {
+            if ($el && $el.length > 0) {
               cy.log('✅ Success message displayed')
               // Verify success styling
               cy.get('.text-green-400, [class*="success"]').should('exist')
@@ -143,8 +142,8 @@ describe('AI Generation Flow - Complete Testing', () => {
           cy.contains(/generate|generar/i).click({ force: true })
 
           // Wait for error message
-          cy.contains(/error|problema|hubo un problema/i, { timeout: 10000 }).then(($el) => {
-            if ($el.length > 0) {
+          cy.contains(/error|problema|hubo un problema/i, { timeout: 10000 }).then(($el: any) => {
+            if ($el && $el.length > 0) {
               cy.log('✅ Error message displayed correctly')
               cy.get('.text-red-400, [class*="error"]').should('exist')
             }
