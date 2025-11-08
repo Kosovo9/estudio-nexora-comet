@@ -90,10 +90,11 @@ export default function OnboardingModal({ lang = 'es', onClose }: OnboardingModa
         width: '100vw',
         height: '100vh',
         zIndex: 30000,
-        background: 'rgba(20, 28, 40, 0.96)',
+        background: 'rgba(0,0,0,0.4)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        backdropFilter: 'blur(2px)',
       }}
     >
       <div
@@ -138,16 +139,16 @@ export default function OnboardingModal({ lang = 'es', onClose }: OnboardingModa
         <button
           onClick={handleClose}
           style={{
-            marginTop: 22,
-            width: '100%',
-            background: '#183E7A',
+            background: '#6750e1',
             color: '#fff',
+            padding: '12px 32px',
             borderRadius: 12,
-            fontWeight: 'bold',
-            padding: '11px 0',
-            fontSize: 19,
             border: 'none',
             cursor: 'pointer',
+            fontSize: 16,
+            fontWeight: 600,
+            marginTop: 22,
+            width: '100%',
           }}
         >
           {t.close}
