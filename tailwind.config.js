@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: '#f0f9ff',
@@ -18,6 +21,8 @@ module.exports = {
         indigo: {
           950: '#0f0a2e',
         },
+        'nexora-blue': '#0066CC',
+        'nexora-green': '#2d5016',
       },
     },
   },
