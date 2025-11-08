@@ -65,7 +65,6 @@ import { getLanguage, setLanguage, type Language } from '@/lib/i18n'
  * - Flujo completo de usuario
  */
 export default function MegaAppComplete() {
-  const [lang, setLang] = useState<Language>('es')
   const [lang, setLang] = useState<Language>(getLanguage())
   const [showOnboard, setShowOnboard] = useState(true)
   const [showPlanet, setShowPlanet] = useState(true)
