@@ -30,7 +30,10 @@
     "seo:audit:local": "node scripts/seo-lighthouse.js http://localhost:3000",
     "seo:keywords": "node scripts/seo-keywords-audit.js",
     "seo:monitor": "bash scripts/seo-monitor.sh",
-    "seo:alert": "node scripts/seo-alert.js"
+    "seo:alert": "node scripts/seo-alert.js",
+    "seo:ranking": "node scripts/seo-ranking-check.js",
+    "seo:backlinks": "node scripts/seo-backlinks.js",
+    "seo:campaigns": "node scripts/seo-campaigns-multilang.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",

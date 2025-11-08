@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { BarChart3, AlertTriangle, CheckCircle, TrendingUp, FileText, Globe } from 'lucide-react'
+import { BarChart3, AlertTriangle, CheckCircle, TrendingUp, FileText, Globe, Search, Link2, Plus, X } from 'lucide-react'
 import { getLanguage, type Language } from '@/lib/i18n'
 
 interface SEOScore {
@@ -36,6 +36,12 @@ export default function AdminSEO() {
   const [keywords, setKeywords] = useState<KeywordData[]>([])
   const [loading, setLoading] = useState(true)
   const [currentScore, setCurrentScore] = useState<SEOScore | null>(null)
+  const [rankings, setRankings] = useState<any[]>([])
+  const [backlinks, setBacklinks] = useState<any[]>([])
+  const [newKeyword, setNewKeyword] = useState('')
+  const [newKeywordCountry, setNewKeywordCountry] = useState('us')
+  const [newBacklinkUrl, setNewBacklinkUrl] = useState('')
+  const [newBacklinkName, setNewBacklinkName] = useState('')
 
   useEffect(() => {
     if (isLoaded && user) {
@@ -69,6 +75,20 @@ export default function AdminSEO() {
         const keywordsData = await keywordsResponse.json()
         setKeywords(keywordsData.keywords || [])
       }
+
+      // Fetch rankings
+      const rankingsResponse = await fetch('/api/admin/seo/rankings')
+      if (rankingsResponse.ok) {
+        const rankingsData = await rankingsResponse.json()
+        setRankings(rankingsData.rankings || [])
+      }
+
+      // Fetch backlinks
+      const backlinksResponse = await fetch('/api/admin/seo/backlinks')
+      if (backlinksResponse.ok) {
+        const backlinksData = await backlinksResponse.json()
+        setBacklinks(backlinksData.backlinks || [])
+      }
     } catch (error) {
       console.error('Error fetching SEO data:', error)
     } finally {
@@ -90,6 +110,67 @@ export default function AdminSEO() {
     } catch (error) {
       console.error('Error running SEO audit:', error)
       alert('❌ Error ejecutando auditoría SEO')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addKeyword = async () => {
+    if (!newKeyword.trim()) return
+
+    try {
+      const response = await fetch('/api/admin/seo/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: newKeyword, country: newKeywordCountry }),
+      })
+
+      if (response.ok) {
+        setNewKeyword('')
+        setNewKeywordCountry('us')
+        fetchSEOData()
+        alert('✅ Keyword agregada!')
+      }
+    } catch (error) {
+      console.error('Error adding keyword:', error)
+      alert('❌ Error agregando keyword')
+    }
+  }
+
+  const addBacklink = async () => {
+    if (!newBacklinkUrl.trim() || !newBacklinkName.trim()) return
+
+    try {
+      const response = await fetch('/api/admin/seo/backlinks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newBacklinkName, url: newBacklinkUrl }),
+      })
+
+      if (response.ok) {
+        setNewBacklinkUrl('')
+        setNewBacklinkName('')
+        fetchSEOData()
+        alert('✅ Backlink agregado!')
+      }
+    } catch (error) {
+      console.error('Error adding backlink:', error)
+      alert('❌ Error agregando backlink')
+    }
+  }
+
+  const checkRankings = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/seo/rankings/check', { method: 'POST' })
+      if (response.ok) {
+        const data = await response.json()
+        alert(`✅ Ranking check completado!\n\nEncontrados: ${data.found}/${data.total}`)
+        fetchSEOData()
+      }
+    } catch (error) {
+      console.error('Error checking rankings:', error)
+      alert('❌ Error verificando rankings')
     } finally {
       setLoading(false)
     }
