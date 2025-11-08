@@ -10,6 +10,7 @@ import PaymentForm from '@/components/PaymentForm'
 import AIGeneration from '@/components/AIGeneration'
 import { generateAI } from '@/lib/ai'
 import { getLanguage, setLanguage, type Language, getTexts } from '@/lib/i18n'
+import SchemaOrg from '@/components/SchemaOrg'
 
 export type Style = 'dark-studio' | 'paris-cafe'
 
@@ -126,7 +127,15 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <>
+      <SchemaOrg
+        type="WebSite"
+        name="Studio Nexora Comet"
+        url="https://studio-nexora.com"
+        description="AI Photo Studio, edición imágenes, afiliados, marketplace."
+        searchAction={true}
+      />
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* QA Progress Indicator */}

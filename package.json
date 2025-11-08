@@ -24,7 +24,10 @@
     "export:csv": "node scripts/export-csv.js",
     "export:pdf": "node scripts/export-pdf.js",
     "qa:run": "npm run test:e2e:full && npm run test:report",
-    "backup:supabase": "node scripts/backupSupabase.js"
+    "backup:supabase": "node scripts/backupSupabase.js",
+    "sitemap:generate": "node scripts/generate-sitemap.js",
+    "seo:audit": "node scripts/seo-lighthouse.js",
+    "seo:audit:local": "node scripts/seo-lighthouse.js http://localhost:3000"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",

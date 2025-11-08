@@ -132,7 +132,7 @@ export default function PhotoUpload({ onUpload, minImages, language }: PhotoUplo
                 <div className="aspect-square relative rounded-lg overflow-hidden border-2 border-gray-700">
                   <Image
                     src={preview}
-                    alt={`Preview ${index + 1}`}
+                    alt={language === 'es' ? `Vista previa ${index + 1} - Foto generada AI Studio Nexora Comet` : `Preview ${index + 1} - AI generated photo Studio Nexora Comet`}
                     fill
                     className="object-cover"
                   />

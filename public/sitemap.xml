@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
+  <url>
+    <loc>https://studio-nexora.com/</loc>
+    <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+    <xhtml:link rel="alternate" hreflang="en-US" href="https://studio-nexora.com/en"/>
+    <xhtml:link rel="alternate" hreflang="es-MX" href="https://studio-nexora.com/es"/>
+  </url>
+  
+  <!-- Language Versions -->
+  <url>
+    <loc>https://studio-nexora.com/en</loc>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://studio-nexora.com/es</loc>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  
+  <!-- Main Features -->
+  <url>
+    <loc>https://studio-nexora.com/</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- Affiliates -->
+  <url>
+    <loc>https://studio-nexora.com/affiliates</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- White Pages -->
+  <url>
+    <loc>https://studio-nexora.com/white-pages</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- Admin Dashboard (lower priority) -->
+  <url>
+    <loc>https://studio-nexora.com/admin/dashboard</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+</urlset>
+

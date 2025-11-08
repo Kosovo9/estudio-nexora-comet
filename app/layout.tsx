@@ -5,12 +5,68 @@ import './globals.css'
 import SentryInit from '@/components/SentryInit'
 import AnalyticsAdvanced from '@/components/AnalyticsAdvanced'
 import MegaUIWrapper from '@/components/MegaUIWrapper'
+import SchemaOrg from '@/components/SchemaOrg'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Studio Nexora Comet - AI Photo Studio',
-  description: 'Transform your photos with AI-powered studio styles',
+  title: 'AI-Powered Photo Studio Global | Studio Nexora Comet',
+  description: 'Global AI Photo Studio: edit, generate, market. Multilanguage support, 100% accessible + trusted worldwide.',
+  keywords: 'ai photo, AI studio, imágenes, generator, edit, studio, AI, photo, marketplace, global, multilingual, internacional, international, affiliate, NFT, token, IA fotos',
+  authors: [{ name: 'Studio Nexora Comet' }],
+  creator: 'Studio Nexora Comet',
+  publisher: 'Studio Nexora Comet',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://studio-nexora.com',
+    siteName: 'Studio Nexora Comet',
+    title: 'AI-Powered Photo Studio Global | Studio Nexora Comet',
+    description: 'Create, edit and sell photos AI-generated anywhere. Now with multi-language and affiliate rewards.',
+    images: [
+      {
+        url: 'https://studio-nexora.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Studio Nexora Comet - AI Photo Studio',
+      },
+    ],
+    alternateLocale: ['es_MX', 'pt_BR', 'fr_FR', 'zh_CN'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Photo Studio Global',
+    description: 'A global platform for AI-powered images, all devices, affiliate program, and marketplace.',
+    images: ['https://studio-nexora.com/og-image.jpg'],
+    creator: '@studio-nexora',
+  },
+  alternates: {
+    canonical: 'https://studio-nexora.com',
+    languages: {
+      'x-default': 'https://studio-nexora.com',
+      'en-US': 'https://studio-nexora.com/en',
+      'es-MX': 'https://studio-nexora.com/es',
+      'pt-BR': 'https://studio-nexora.com/pt',
+      'fr-FR': 'https://studio-nexora.com/fr',
+      'zh-CN': 'https://studio-nexora.com/zh',
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || '',
+    bing: process.env.NEXT_PUBLIC_BING_VERIFICATION || '',
+  },
 }
 
 // Google Analytics Component
@@ -49,6 +105,7 @@ export default function RootLayout({
           <GoogleAnalytics />
         </head>
         <body className={inter.className}>
+          <SchemaOrg />
           <SentryInit />
           <AnalyticsAdvanced />
           {children}
