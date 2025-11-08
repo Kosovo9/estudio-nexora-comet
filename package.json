@@ -33,7 +33,9 @@
     "seo:alert": "node scripts/seo-alert.js",
     "seo:ranking": "node scripts/seo-ranking-check.js",
     "seo:backlinks": "node scripts/seo-backlinks.js",
-    "seo:campaigns": "node scripts/seo-campaigns-multilang.js"
+    "seo:campaigns": "node scripts/seo-campaigns-multilang.js",
+    "seo:google-console": "node scripts/google-search-console.js",
+    "seo:google-auth": "node scripts/google-search-console-auth.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",

@@ -11,6 +11,7 @@ import AIGeneration from '@/components/AIGeneration'
 import { generateAI } from '@/lib/ai'
 import { getLanguage, setLanguage, type Language, getTexts } from '@/lib/i18n'
 import SchemaOrg from '@/components/SchemaOrg'
+import FooterNexora from '@/components/FooterNexora'
 
 export type Style = 'dark-studio' | 'paris-cafe'
 

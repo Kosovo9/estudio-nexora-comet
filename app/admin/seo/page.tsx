@@ -176,6 +176,26 @@ export default function AdminSEO() {
     }
   }
 
+  const fetchGoogleConsole = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/seo/google-console', { method: 'POST' })
+      if (response.ok) {
+        const data = await response.json()
+        alert(`✅ Google Search Console data fetch iniciado!\n\n${data.message}`)
+        // Refrescar después de unos segundos
+        setTimeout(() => {
+          fetchSEOData()
+        }, 5000)
+      }
+    } catch (error) {
+      console.error('Error fetching Google Console:', error)
+      alert('❌ Error obteniendo datos de Google Search Console')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -219,14 +239,24 @@ export default function AdminSEO() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t.title}
           </h1>
-          <button
-            onClick={runSEOAudit}
-            disabled={loading}
-            className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-600 transition-all flex items-center space-x-2 disabled:opacity-50"
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span>{t.runAudit}</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={runSEOAudit}
+              disabled={loading}
+              className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-600 transition-all flex items-center space-x-2 disabled:opacity-50"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>{t.runAudit}</span>
+            </button>
+            <button
+              onClick={fetchGoogleConsole}
+              disabled={loading}
+              className="px-6 py-3 bg-green-500 rounded-lg hover:bg-green-600 transition-all flex items-center space-x-2 disabled:opacity-50"
+            >
+              <Globe className="w-5 h-5" />
+              <span>{language === 'es' ? 'Google Console' : 'Google Console'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Current Scores */}

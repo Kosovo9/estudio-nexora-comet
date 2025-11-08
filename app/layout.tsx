@@ -6,6 +6,7 @@ import SentryInit from '@/components/SentryInit'
 import AnalyticsAdvanced from '@/components/AnalyticsAdvanced'
 import MegaUIWrapper from '@/components/MegaUIWrapper'
 import SchemaOrg from '@/components/SchemaOrg'
+import ChatAI247 from '@/components/ChatAI247'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -110,6 +111,7 @@ export default function RootLayout({
           <AnalyticsAdvanced />
           {children}
           <MegaUIWrapper />
+          <ChatAI247 lang="en" />
           {/* Support Chat Footer */}
           <footer className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-4 z-50">
             <div className="container mx-auto flex items-center justify-between">
