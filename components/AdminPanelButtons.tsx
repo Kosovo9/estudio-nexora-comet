@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaUsers, FaGlobe, FaRobot, FaCheckCircle, FaFileExport, FaChartBar } from 'react-icons/fa'
+import { FaUsers, FaGlobe, FaRobot, FaCheckCircle, FaFileExport, FaChartBar, FaSearch } from 'react-icons/fa'
 import { type Language, getTexts } from '@/lib/i18n'
 
 interface AdminPanelButtonsProps {

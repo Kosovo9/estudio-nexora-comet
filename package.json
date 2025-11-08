@@ -27,7 +27,10 @@
     "backup:supabase": "node scripts/backupSupabase.js",
     "sitemap:generate": "node scripts/generate-sitemap.js",
     "seo:audit": "node scripts/seo-lighthouse.js",
-    "seo:audit:local": "node scripts/seo-lighthouse.js http://localhost:3000"
+    "seo:audit:local": "node scripts/seo-lighthouse.js http://localhost:3000",
+    "seo:keywords": "node scripts/seo-keywords-audit.js",
+    "seo:monitor": "bash scripts/seo-monitor.sh",
+    "seo:alert": "node scripts/seo-alert.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",
