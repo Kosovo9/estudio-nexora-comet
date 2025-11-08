@@ -38,7 +38,9 @@ export default function StudioNexoraCometLuxury() {
       0.1,
       10000
     )
-    camera.position.z = 2.3
+    // 🎯 POSICIÓN PERFECTA - SIN VER LA BOLA NEGRA
+    camera.position.set(0.5, 0.3, 2.4)
+    camera.lookAt(0, 0, 0)
 
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true, 
