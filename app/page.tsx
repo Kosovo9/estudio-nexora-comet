@@ -41,26 +41,74 @@ interface EarthProps {
 
 // Componente para cargar y aplicar texturas
 const Earth = React.memo(({ rotationSpeedFactor }: EarthProps) => {
-  // Carga de texturas. Si no existen, Three.js usará un color por defecto (negro/gris).
-  const [colorMap, cloudsMap, specularMap, bumpMap] = useLoader(TextureLoader, [
-    TEXTURE_PATHS.earth,
-    TEXTURE_PATHS.clouds,
-    TEXTURE_PATHS.specular,
-    TEXTURE_PATHS.bump,
-  ]);
+  // Carga de texturas con manejo de errores
+  // Si no existen, Three.js usará un color por defecto (negro/gris).
+  const [textures, setTextures] = useState<{
+    colorMap: THREE.Texture | null;
+    cloudsMap: THREE.Texture | null;
+    specularMap: THREE.Texture | null;
+    bumpMap: THREE.Texture | null;
+  } | null>(null);
+  const [textureError, setTextureError] = useState(false);
 
   const earthRef = useRef<THREE.Mesh>(null!);
   const cloudsRef = useRef<THREE.Mesh>(null!);
 
+  useEffect(() => {
+    const loader = new TextureLoader();
+    const loadTextures = async () => {
+      try {
+        const [color, clouds, specular, bump] = await Promise.all([
+          loader.loadAsync(TEXTURE_PATHS.earth).catch(() => null),
+          loader.loadAsync(TEXTURE_PATHS.clouds).catch(() => null),
+          loader.loadAsync(TEXTURE_PATHS.specular).catch(() => null),
+          loader.loadAsync(TEXTURE_PATHS.bump).catch(() => null),
+        ]);
+        
+        if (color || clouds || specular || bump) {
+          setTextures({ colorMap: color, cloudsMap: clouds, specularMap: specular, bumpMap: bump });
+        } else {
+          setTextureError(true);
+        }
+      } catch (error) {
+        console.warn('Error cargando texturas:', error);
+        setTextureError(true);
+      }
+    };
+    loadTextures();
+  }, []);
+
   // Rotación a 60FPS (Optimización 100x: Uso de requestAnimationFrame a través de useFrame)
   useFrame(({ clock }) => {
-    // La velocidad base es 0.00005, multiplicada por el factor de usuario
-    const baseSpeed = 0.00005;
-    const speed = baseSpeed * rotationSpeedFactor;
-    
-    earthRef.current.rotation.y += speed * 10;
-    cloudsRef.current.rotation.y += speed * 12;
+    if (earthRef.current && cloudsRef.current) {
+      // La velocidad base es 0.00005, multiplicada por el factor de usuario
+      const baseSpeed = 0.00005;
+      const speed = baseSpeed * rotationSpeedFactor;
+      
+      earthRef.current.rotation.y += speed * 10;
+      if (cloudsRef.current) {
+        cloudsRef.current.rotation.y += speed * 12;
+      }
+    }
   });
+
+  // Si hay error, usar materiales con colores por defecto más visibles
+  if (textureError || !textures) {
+    return (
+      <group>
+        <mesh ref={earthRef}>
+          <sphereGeometry args={[1, 64, 64]} />
+          <meshStandardMaterial
+            color={0x4a90e2}
+            metalness={0.3}
+            roughness={0.7}
+          />
+        </mesh>
+      </group>
+    );
+  }
+
+  const { colorMap, cloudsMap, specularMap, bumpMap } = textures;
 
   // Ajuste de cámara y luz para eliminar artefactos (bola negra)
   // La luz direccional simula el sol, y la luz ambiental suaviza las sombras.
@@ -82,15 +130,17 @@ const Earth = React.memo(({ rotationSpeedFactor }: EarthProps) => {
       </mesh>
 
       {/* Nubes */}
-      <mesh ref={cloudsRef}>
-        <sphereGeometry args={[1.003, 64, 64]} />
-        <meshStandardMaterial
-          map={cloudsMap}
-          transparent={true}
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
+      {cloudsMap && (
+        <mesh ref={cloudsRef}>
+          <sphereGeometry args={[1.003, 64, 64]} />
+          <meshStandardMaterial
+            map={cloudsMap}
+            transparent={true}
+            opacity={0.8}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      )}
 
       <OrbitControls
         enableZoom={true}
