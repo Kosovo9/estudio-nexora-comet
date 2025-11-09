@@ -40,6 +40,14 @@ const Earth = React.memo(({ rotationSpeedFactor }: { rotationSpeedFactor: number
           loader.loadAsync(TEXTURE_PATHS.bump).catch(() => null),
         ]);
         
+        // Configurar wrap mode para texturas
+        [color, clouds, specular, bump].forEach(texture => {
+          if (texture) {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+          }
+        });
+        
         if (color || clouds || specular || bump) {
           setTextures({ colorMap: color, cloudsMap: clouds, specularMap: specular, bumpMap: bump });
         } else {
@@ -55,12 +63,15 @@ const Earth = React.memo(({ rotationSpeedFactor }: { rotationSpeedFactor: number
 
   useFrame(() => {
     if (earthRef.current && cloudsRef.current) {
-      const baseSpeed = 0.00005;
+      // Rotación continua de izquierda a derecha (eje Y positivo)
+      const baseSpeed = 0.0005; // Velocidad base optimizada para rotación suave
       const speed = baseSpeed * rotationSpeedFactor;
-      earthRef.current.rotation.y += speed * 10;
-      if (cloudsRef.current) {
-        cloudsRef.current.rotation.y += speed * 12;
-      }
+      
+      // Rotación de la Tierra
+      earthRef.current.rotation.y += speed;
+      
+      // Rotación de las nubes (1.2x más rápido para efecto atmosférico)
+      cloudsRef.current.rotation.y += speed * 1.2;
     }
   });
 
@@ -83,27 +94,44 @@ const Earth = React.memo(({ rotationSpeedFactor }: { rotationSpeedFactor: number
 
   return (
     <group>
+      {/* Planeta Tierra con materiales fotorrealistas */}
       <mesh ref={earthRef}>
-        <sphereGeometry args={[1, 64, 64]} />
+        <sphereGeometry args={[1, 128, 128]} />
         <meshPhongMaterial
           map={colorMap}
           specularMap={specularMap}
           bumpMap={bumpMap}
-          bumpScale={0.05}
-          shininess={10}
+          bumpScale={0.1}
+          shininess={30}
+          specular={0x222222}
         />
       </mesh>
+      
+      {/* Nubes con efecto atmosférico */}
       {cloudsMap && (
         <mesh ref={cloudsRef}>
-          <sphereGeometry args={[1.003, 64, 64]} />
+          <sphereGeometry args={[1.003, 128, 128]} />
           <meshStandardMaterial
             map={cloudsMap}
             transparent={true}
-            opacity={0.8}
+            opacity={0.6}
             blending={THREE.AdditiveBlending}
+            emissive={0xffffff}
+            emissiveIntensity={0.2}
           />
         </mesh>
       )}
+      
+      {/* Efecto de atmósfera (glow azul) */}
+      <mesh>
+        <sphereGeometry args={[1.01, 64, 64]} />
+        <meshBasicMaterial
+          color={0x4a90e2}
+          transparent={true}
+          opacity={0.15}
+          side={THREE.BackSide}
+        />
+      </mesh>
       <OrbitControls
         enableZoom={true}
         enablePan={false}
@@ -123,16 +151,24 @@ Earth.displayName = 'Earth';
 export default function Earth3D({ rotationSpeedFactor }: Earth3DProps) {
   return (
     <Canvas camera={{ position: [0, 0, 2.5], fov: 50 }} className="w-full h-full">
-      <ambientLight intensity={0.5} />
+      {/* Iluminación realista para efecto día/noche */}
+      <ambientLight intensity={0.3} />
       <directionalLight position={[5, 3, 5]} intensity={1.5} color={0xffffff} />
+      
+      {/* Punto de luz adicional para efecto de terminador (línea día/noche) */}
+      <pointLight position={[3, 2, 3]} intensity={0.5} color={0xffffff} distance={10} decay={2} />
+      
+      {/* Fondo estelar hiperrealista con 50,000 estrellas */}
       <Stars
-        radius={300}
-        depth={60}
-        count={20000}
-        factor={7}
+        radius={500}
+        depth={100}
+        count={50000}
+        factor={10}
         saturation={0}
         fade={true}
+        speed={0.5}
       />
+      
       <Earth rotationSpeedFactor={rotationSpeedFactor} />
     </Canvas>
   );
