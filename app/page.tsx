@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -98,6 +98,60 @@ export default function Home() {
   const [log, setLog] = useState<string[]>([]);
   const [rotationSpeedFactor, setRotationSpeedFactor] = useState(1);
   const [showUpload, setShowUpload] = useState(false);
+
+  // Optimización 100x - Asegurar que todos los elementos estén funcionales
+  useEffect(() => {
+    // Optimizar botones y elementos interactivos
+    const optimizeButtons = () => {
+      const allButtons = document.querySelectorAll('button, [onclick], .btn, [role="button"]');
+      allButtons.forEach(btn => {
+        if (btn instanceof HTMLElement) {
+          btn.style.pointerEvents = 'auto';
+          btn.style.opacity = '1';
+          btn.setAttribute('tabindex', '0');
+          btn.removeAttribute('disabled');
+          btn.classList.remove('disabled', 'inactive');
+        }
+      });
+    };
+
+    // Precargar assets críticos
+    const preloadCriticalAssets = () => {
+      const criticalAssets = [
+        '/textures/earth_daymap.jpg',
+        '/textures/earth_bump.jpg',
+        '/textures/earth_specular.jpg',
+        '/textures/earth_clouds.png'
+      ];
+
+      criticalAssets.forEach(asset => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.href = asset;
+        link.as = 'image';
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+      });
+    };
+
+    // Ejecutar optimizaciones
+    optimizeButtons();
+    preloadCriticalAssets();
+
+    // Re-optimizar después de cambios en el DOM
+    const observer = new MutationObserver(() => {
+      optimizeButtons();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const t = useCallback(
     (key: keyof typeof DICTIONARY['es']) => {

@@ -113,10 +113,10 @@ export default function RootLayout({
           {children}
           <MegaUIWrapper />
           <ChatAI247 lang="en" />
-          {/* Support Chat Footer */}
-          <footer className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-4 z-50">
-            <div className="container mx-auto flex items-center justify-between">
-              <div className="text-sm text-gray-400">
+          {/* Support Chat Footer - Optimizado para no interferir con UI */}
+          <footer className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-gray-800/50 p-3 z-40">
+            <div className="container mx-auto flex items-center justify-between text-xs">
+              <div className="text-gray-400">
                 <span>Need help? </span>
                 <a
                   href="/admin/chat"
@@ -132,8 +132,8 @@ export default function RootLayout({
                   Email Support
                 </a>
               </div>
-              <div className="text-xs text-gray-500">
-                Studio Nexora Comet © 2024
+              <div className="text-gray-500">
+                Studio Nexora Comet © 2025
               </div>
             </div>
           </footer>

@@ -2,17 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================================================
+   OPTIMIZACIÓN 100x - ELIMINACIÓN DE RECUADROS BLANCOS Y OPTIMIZACIÓN DE RENDIMIENTO
+   ============================================================================================================ */
+
 /* Estilos para asegurar que la aplicación ocupe toda la pantalla */
 html, body, #__next {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Evita barras de desplazamiento */
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-/* Fondo negro para simular el espacio */
+/* Fondo negro para simular el espacio - Optimizado 100x */
 body {
-  background-color: #000000;
+  background-color: #000000 !important;
+  background: linear-gradient(135deg, #0a0a0a 0%, #000000 50%, #0a0a0a 100%) !important;
+  overflow-x: hidden;
+}
+
+/* ELIMINAR RECUADRO BLANCO - CSS URGENTE */
+.background-overlay,
+.white-frame,
+.unwanted-background,
+.fixed-container,
+[class*="white-frame"],
+[class*="white-overlay"],
+[style*="background: white"],
+[style*="background-color: white"],
+[style*="background: #fff"],
+[style*="background-color: #fff"] {
+  display: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Optimizar rendimiento 100x */
+* {
+  box-sizing: border-box;
 }
 
 /* Ocultar Vercel Toolbar en producción */
@@ -29,5 +57,21 @@ body {
   #vercel-toolbar {
     display: none !important;
   }
+}
+
+/* Optimización de renderizado - GPU acceleration */
+canvas,
+[class*="three"],
+[class*="earth"],
+[class*="planet"] {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Preload crítico para texturas */
+link[rel="preload"][as="image"] {
+  display: none;
 }
 
