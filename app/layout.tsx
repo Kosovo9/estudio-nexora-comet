@@ -7,6 +7,7 @@ import AnalyticsAdvanced from '@/components/AnalyticsAdvanced'
 import MegaUIWrapper from '@/components/MegaUIWrapper'
 import SchemaOrg from '@/components/SchemaOrg'
 import ChatAI247 from '@/components/ChatAI247'
+import CustomBackground from '@/components/CustomBackground'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -102,15 +103,18 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className="bg-transparent">
         <head>
           <GoogleAnalytics />
         </head>
-        <body className={inter.className}>
+        <body className={`${inter.className} bg-transparent background-transparent`}>
+          <CustomBackground />
           <SchemaOrg />
           <SentryInit />
           <AnalyticsAdvanced />
-          {children}
+          <div className="relative z-10 min-h-screen bg-transparent background-transparent">
+            {children}
+          </div>
           <MegaUIWrapper />
           <ChatAI247 lang="en" />
           {/* Support Chat Footer - Optimizado para no interferir con UI */}

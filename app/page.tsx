@@ -186,7 +186,7 @@ export default function Home() {
   }, [handleAction, t]);
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden font-sans">
+    <main className="relative min-h-screen bg-transparent background-transparent overflow-hidden font-sans">
       {/* Navbar */}
       <Navbar
         lang={lang}
@@ -313,6 +313,6 @@ export default function Home() {
           </div>
         </footer>
       </div>
-    </div>
+    </main>
   );
 }
