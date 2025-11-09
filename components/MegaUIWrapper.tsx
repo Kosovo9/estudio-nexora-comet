@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { getLanguage, type Language } from '@/lib/i18n'
 import MegaUI from './MegaUI'
-import OnboardingModal from './OnboardingModal'
 import ThemeToggle from './ThemeToggle'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
@@ -13,18 +12,11 @@ export default function MegaUIWrapper() {
   const [language, setLanguage] = useState<Language>('en')
   const [showEarth, setShowEarth] = useState(true)
   const [showCopilot, setShowCopilot] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     if (isLoaded) {
       const lang = getLanguage()
       setLanguage(lang)
-
-      // Show onboarding on first visit
-      const hasSeenOnboarding = localStorage.getItem('nexora_onboarding_seen') === 'true'
-      if (!hasSeenOnboarding) {
-        setShowOnboarding(true)
-      }
     }
   }, [isLoaded])
 
@@ -49,12 +41,6 @@ export default function MegaUIWrapper() {
 
   return (
     <>
-      {showOnboarding && (
-        <OnboardingModal
-          lang={language}
-          onClose={() => setShowOnboarding(false)}
-        />
-      )}
       <MegaUI
         lang={language}
         earthFloating="top-right"
