@@ -24,6 +24,11 @@ interface QAWidgetProps {
 }
 
 export default function QAWidget({ lang = 'es', floating = 'bottom-left' }: QAWidgetProps) {
+  // Solo mostrar en desarrollo
+  if (process.env.NODE_ENV === 'production') {
+    return null
+  }
+
   const [running, setRunning] = useState(false)
   const t = texts[lang]
 

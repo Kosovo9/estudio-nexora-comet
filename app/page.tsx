@@ -225,12 +225,15 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="w-full mt-auto flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 border-t border-white/10">
-          <FunctionalButton
-            text={t('qaAutomatic')}
-            icon={<Check size={18} />}
-            onClick={() => handleAction(t('qaAutomatic'))}
-            className="!bg-green-700/80 !text-white text-sm px-3 py-1 shadow-none hover:!bg-green-600"
-          />
+          {/* Botón QA solo en desarrollo */}
+          {process.env.NODE_ENV !== 'production' && (
+            <FunctionalButton
+              text={t('qaAutomatic')}
+              icon={<Check size={18} />}
+              onClick={() => handleAction(t('qaAutomatic'))}
+              className="!bg-green-700/80 !text-white text-sm px-3 py-1 shadow-none hover:!bg-green-600"
+            />
+          )}
 
           <div className="hidden md:block bg-black/50 p-2 rounded-lg text-xs text-gray-400 max-w-lg">
             <p className="font-bold mb-1">{t('missionLog')}:</p>
