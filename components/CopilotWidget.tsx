@@ -35,8 +35,8 @@ export default function CopilotWidget({
   const texts = getTexts(language)
 
   const positionMap = {
-    'bottom-right': { right: 14, bottom: 16 },
-    'bottom-left': { left: 14, bottom: 16 },
+    'bottom-right': { right: 14, bottom: 80 }, // Mover más arriba para evitar conflicto con footer
+    'bottom-left': { left: 14, bottom: 80 },
     'top-right': { right: 14, top: 16 },
     'top-left': { left: 14, top: 16 },
   }

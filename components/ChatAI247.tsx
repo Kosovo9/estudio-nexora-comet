@@ -107,7 +107,7 @@ export default function ChatAI247({ lang = 'es' }: ChatAI247Props) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-4 bottom-4 z-[20000] bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110"
+        className="fixed right-4 bottom-20 z-[20000] bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110"
         aria-label={t.title}
       >
         <Bot className="w-6 h-6" />
@@ -117,7 +117,7 @@ export default function ChatAI247({ lang = 'es' }: ChatAI247Props) {
 
   if (isMinimized) {
     return (
-      <div className="fixed right-4 bottom-4 z-[20000] bg-gray-800 rounded-lg shadow-2xl border border-gray-700">
+      <div className="fixed right-4 bottom-20 z-[20000] bg-gray-800 rounded-lg shadow-2xl border border-gray-700">
         <div className="flex items-center justify-between p-3">
           <span className="text-sm font-semibold text-blue-300">{t.title}</span>
           <button
@@ -133,7 +133,7 @@ export default function ChatAI247({ lang = 'es' }: ChatAI247Props) {
 
   return (
     <div
-      className="fixed right-4 bottom-4 z-[20000] w-80 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 flex flex-col"
+      className="fixed right-4 bottom-20 z-[20000] w-80 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 flex flex-col"
       style={{ height: isMinimized ? 'auto' : '500px' }}
     >
       {/* Header */}

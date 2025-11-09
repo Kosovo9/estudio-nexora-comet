@@ -57,7 +57,7 @@ export default function MegaUIWrapper() {
       )}
       <MegaUI
         lang={language}
-        earthFloating="top-left"
+        earthFloating="top-right"
         copilotFloating="bottom-right"
         qaFloating="bottom-left"
         user={{
